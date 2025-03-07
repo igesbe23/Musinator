@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Musinator</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+    <!-- Contenedor de la lluvia de cartas -->
+    <div id="rain-container"></div>
+    
+    <div class="container">
+        <h1>MUSINATOR</h1>
+    </div>
+    <div id="arboles" class="repeated-image"></div>
+    
+    <!-- Contenedor de la sección de inputs y resultados -->
+    <div class="cajas-paralelas">
+        <div id="input-containers" class="cajas-paralelas">
+            <!-- Aquí se generarán dinámicamente los contenedores de input -->
+            <div class="user-input" id="input-1">
+                <h2>Meta Su Mano Aquí</h2>
+                <div class="input-container">
+                    <input type="text" class="textInput" id="textInput-1" placeholder="Escriba aquí...">
+                    <button class="sendButton" id="sendButton-1">Enviar a Musinator</button>
+                </div>
+                <div id="response-box-1" class="response-box">
+                    <!-- Respuesta del JavaScript -->
+                </div>
+            </div>
+            <div class="separador"></div>
+        </div>
+    </div>
+
+    <!-- Vincular con el archivo JavaScript -->
+    <script src="/static/script.js"></script>
+</body>
+</html>

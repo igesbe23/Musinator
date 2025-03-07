@@ -1,0 +1,679 @@
+// Mostrar las probabilidades
+            const responseMessage = `
+                ${Probabilidades[1]} <br>
+                Grande: ${Probabilidades[0][0][0]}% <br>
+                Chica: ${Probabilidades[0][0][1]}% <br>
+                Pares al primero: ${Probabilidades[0][1][0]}% <br>
+                Pares al segundo: ${Probabilidades[0][1][1]}% <br>
+                Pares a ambos: ${Probabilidades[0][1][2]}% <br>
+                Juego al primero: ${Probabilidades[0][2][0]}% <br>
+                Juego al segundo: ${Probabilidades[0][2][1]}% <br>
+                Juego a ambos: ${Probabilidades[0][2][2]}% <br>
+                Al Punto: ${Probabilidades[0][2][3]}% <br>
+            `;
+            responseDiv.innerHTML += responseMessage;
+
+Object.keys(repetpares_i).forEach((clave) =>{
+        const reps = repetpares_i[clave].length;
+        const lnew = reps*clave;
+        if (reps>1){
+            repetpares_i[clave].forEach(v => insertarOrdenado(repetpares_j[lnew],v,lnew))
+        }
+    });
+    Object.keys(repetpares_j).forEach((clave) =>{
+        const reps = repetpares_j[clave].length;
+        const lnew = reps*clave;
+        if (reps>1){
+            repetpares_j[clave].forEach(v => insertarOrdenado(repetpares_j[lnew],v,lnew))
+        }
+    });
+
+
+
+
+
+//FUNCIONES PARA PROBABILIDAD SIN MUS
+
+function valor(carta) {
+    if (['K','3', 'Q', 'J'].includes(carta)) {
+        return 10;
+    } else if (['1', '2'].includes(carta)) {
+        return 1;
+    } else {
+        return parseInt(carta, 10);
+    }
+}
+
+function combinaciones_de_cuatro_con_repeticion_unicas(valores) {
+    let valoresDeRepeticion = {}
+    let combinaciones = new Set()
+    let n = valores.length
+
+    for (let i = 0; i < n; i++) {
+        for (let j = i; j < n; j++) {
+            for (let k = j; k < n; k++) {
+                for (let l = k; l < n; l++) {
+                    let mano = [valores[i], valores[j], valores[k], valores[l]];
+                    let manoKey = JSON.stringify(mano); // Convertir la mano a string para almacenarla en el Set
+                    combinaciones.add(manoKey);
+
+                    // Calcular el valor de repetición
+                    let amplia = 1;
+                    let manoSet = new Set(mano);
+                    manoSet.forEach(carta => {
+                        let count = mano.filter(v => v === carta).length;
+                        amplia *= count===1 ? 4 : count===2 ? 6 : count===3 ?  4 : 1 
+                    });
+                    valoresDeRepeticion[manoKey] = amplia;
+                }
+            }
+        }
+    }
+
+    let combinacionesList = Array.from(combinaciones).map(mano => JSON.parse(mano));
+    return [combinacionesList, valoresDeRepeticion];
+}
+
+function reductor_de_frecuencias(Valores,valoresDeRepeticionManos,MasNoDisponibles,PreReductorDeFrecuencias={}){
+    let ReductorDeFrecuencias = {}
+    for (let i = 0; i<Valores.length;i++){
+        let carta = Valores[i]
+        if (Valores[i] in PreReductorDeFrecuencias){
+            ReductorDeFrecuencias[Valores[i]] = MasNoDisponibles.filter(v => v === carta).length + PreReductorDeFrecuencias[Valores[i]]
+        } else{
+            ReductorDeFrecuencias[Valores[i]] = MasNoDisponibles.filter(v => v === carta).length
+        }
+        if (ReductorDeFrecuencias[Valores[i]]>4){
+            ReductorDeFrecuencias[Valores[i]]=4
+        }
+    }
+    //Actualizamos frecuencias (diversion)
+    let nuevasFrecuencias = {}
+    Object.keys(valoresDeRepeticionManos).forEach(clave => {
+        let mano_potencial = JSON.parse(clave.replace(/'/g, '"'))
+        let reduccion = 1
+        let mano_potencialSet = new Set(mano_potencial)
+        for(const carta of mano_potencialSet){
+            let reductor = ReductorDeFrecuencias[carta]
+            let reduciendo = mano_potencial.filter(v => v === carta).length
+            if (reduccion !== 0){
+                if (4-reductor<reduciendo){
+                    reduccion=0
+                    break
+                }
+                let num = 1
+                for (let i=reductor; i< (reductor + reduciendo); i++){
+                    num*=(4-i)
+                }
+                let den = 1
+                for (let i=0; i<reduciendo; i++){
+                    den*=(4-i)
+                }
+                reduccion *= (num/den)
+            } else{
+                break
+            }
+        }
+        if (reduccion!=0){
+            nuevasFrecuencias[clave] = valoresDeRepeticionManos[clave]*reduccion
+        }  
+    });
+    return [nuevasFrecuencias,ReductorDeFrecuencias]
+}
+
+function FPtotal(Dict){
+    return Object.keys(Dict).reduce((acc,clave) => acc + (repet(JSON.parse(clave.replace(/'/g, '"'))) ? Dict[clave] : 0),0)
+}
+
+function JPtotal(Dict){
+    return Object.keys(Dict).reduce((acc,clave) => acc + (JSON.parse(clave.replace(/'/g, '"')).reduce((acc, i) => acc + valor(i), 0) ? Dict[clave] : 0),0)
+}
+
+function probabilidad_mus(mano_amiga1,mano_amiga2=[],Manos,soymano=true,PreReductorDeFrecuencias={}){
+    let Quitar = mano_amiga1.concat(mano_amiga2)
+    mano_amiga1 = mano_amiga1.split('')
+    mano_amiga2 = mano_amiga2.split('')
+    let Juegos_Gano=[[0,0],[0,0,0],[0,0,0,0]]
+    let Juegos_Pierdo=[[0,0],[0,0,0],[0,0,0,0]]
+    let mano_amiga1_juego = mano_amiga1.reduce((acc, i) => acc + valor(i), 0)
+    let mano_amiga2_juego = mano_amiga2.reduce((acc, i) => acc + valor(i), 0)
+    //Quitar manos1 imposibles y alterar frecuencias
+    let Frecuencias1 = reductor_de_frecuencias(misValores,Manos[1],Quitar.split(''),PreReductorDeFrecuencias)
+    for (let mano_enemiga1 of Object.keys(Frecuencias1[0])){
+        let frecuencia1 = Frecuencias1[0][mano_enemiga1]
+        //Primero frecuencia luego desestringizar
+        mano_enemiga1 = JSON.parse(mano_enemiga1.replace(/'/g, '"'))
+        let mano_enemiga1_juego = mano_enemiga1.reduce((acc, i) => acc + valor(i), 0)
+        //Quitar manos2 imposibles y alterar frecuencias        
+        let Quitar2 = Quitar.concat(mano_enemiga1.join(''))
+        let Frecuencias2 = reductor_de_frecuencias(misValores,Frecuencias1[0],Quitar2.split(''),Frecuencias1[1])
+        let frecuenciaPtotal2 = FPtotal(Frecuencias2[0])
+        let frecuenciaJtotal2 = JPtotal(Frecuencias2[0])
+        let Juegos_Gano_Temp=[[0,0],[0,0,0],[0,0,0,0]]
+        let Juegos_Pierdo_Temp=[[0,0],[0,0,0],[0,0,0,0]]
+        for (let mano_enemiga2 of Object.keys(Frecuencias2[0])){
+            let frecuencia2 = Frecuencias2[0][mano_enemiga2]
+            //Primero frecuencia luego desestringizar
+            mano_enemiga2 = JSON.parse(mano_enemiga2.replace(/'/g, '"'))
+            let mano_enemiga2_juego = mano_enemiga2.reduce((acc, i) => acc + valor(i), 0)
+            //Claro, ahora tenemos que realizar casuística
+            
+            let a1e1 = relorden(mano_amiga1, mano_enemiga1, soymano);
+            let a2e2 = relorden(mano_amiga2, mano_enemiga2, soymano);
+            let e1a2 = relorden(mano_enemiga1, mano_amiga2, soymano);
+            let a1e2 = relorden(mano_amiga1, mano_enemiga2, soymano);
+            
+            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+                Juegos_Gano_Temp[0][0] += frecuencia1 * frecuencia2;
+            } else {
+                Juegos_Pierdo_Temp[0][0] += frecuencia1 * frecuencia2;
+            }
+
+            a1e1 = relorden(mano_amiga1, mano_enemiga1, soymano, false);
+            a2e2 = relorden(mano_amiga2, mano_enemiga2, soymano, false);
+            e1a2 = relorden(mano_enemiga1, mano_amiga2, soymano, false);
+            a1e2 = relorden(mano_amiga1, mano_enemiga2, soymano, false);
+            
+            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+                Juegos_Gano_Temp[0][1] += frecuencia1 * frecuencia2;
+            } else {
+                Juegos_Pierdo_Temp[0][1] += frecuencia1 * frecuencia2;
+            }
+            
+            a1e1 = relordenP(mano_amiga1, mano_enemiga1, soymano);
+            a2e2 = relordenP(mano_amiga2, mano_enemiga2, soymano);
+            e1a2 = relordenP(mano_enemiga1, mano_amiga2, soymano);
+            a1e2 = relordenP(mano_amiga1, mano_enemiga2, soymano);
+
+            let mano_enemiga1_pares_bool = repet(mano_enemiga1)
+            let mano_enemiga2_pares_bool = repet(mano_enemiga2)
+            
+            if (mano_enemiga1_pares_bool && !mano_enemiga2_pares_bool) {
+                if ((a1e1 >= 0) || (e1a2 === -1)) {
+                    Juegos_Gano_Temp[1][0] += frecuencia1 * frecuencia2;
+                } else {
+                    Juegos_Pierdo_Temp[1][0] += frecuencia1 * frecuencia2;
+                }
+            } else if (mano_enemiga2_pares_bool && !mano_enemiga1_pares_bool){
+                if ((a1e2 >= 0) || (a2e2 >= 0)) {
+                    Juegos_Gano_Temp[1][1] += frecuencia1 * frecuencia2;
+                } else {
+                    Juegos_Pierdo_Temp[1][1] += frecuencia1 * frecuencia2;
+                }
+            } else if (mano_enemiga1_pares_bool && mano_enemiga2_pares_bool) {
+                if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+                    Juegos_Gano_Temp[1][2] += frecuencia1 * frecuencia2;
+                } else {
+                    Juegos_Pierdo_Temp[1][2] += frecuencia1 * frecuencia2;
+                }
+            } 
+            
+            a1e1 = relordenJ(mano_amiga1_juego, mano_enemiga1_juego, soymano);
+            a2e2 = relordenJ(mano_amiga2_juego, mano_enemiga2_juego, soymano);
+            e1a2 = relordenJ(mano_enemiga1_juego, mano_amiga2_juego, soymano);
+            a1e2 = relordenJ(mano_amiga1_juego, mano_enemiga2_juego, soymano);
+            
+            if (mano_enemiga1_juego > 30 && mano_enemiga2_juego < 31) {
+                if ((a1e1 >= 0) || (e1a2 < 0)) {
+                    Juegos_Gano_Temp[2][0] += frecuencia1 * frecuencia2;
+                } else {
+                    Juegos_Pierdo_Temp[2][0] += frecuencia1 * frecuencia2;
+                }
+            } else if (mano_enemiga2_juego > 30 && mano_enemiga1_juego < 31) {
+                if ((a1e2 >= 0) || (a2e2 >= 0)) {
+                    Juegos_Gano_Temp[2][1] += frecuencia1 * frecuencia2;
+                } else {
+                    Juegos_Pierdo_Temp[2][1] += frecuencia1 * frecuencia2;
+                }
+            } else if (mano_enemiga1_juego > 30 && mano_enemiga2_juego > 30) {
+                if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+                    Juegos_Gano_Temp[2][2] += frecuencia1 * frecuencia2;
+                } else {
+                    Juegos_Pierdo_Temp[2][2] += frecuencia1 * frecuencia2;
+                }
+            } else if (mano_enemiga1_juego < 31 && mano_enemiga2_juego < 31) {
+                if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+                    Juegos_Gano_Temp[2][3] += frecuencia1 * frecuencia2;
+                } else {
+                    Juegos_Pierdo_Temp[2][3] += frecuencia1 * frecuencia2;
+                }
+            }
+        }
+        //Nota: Podríamos probar con lógica bayesiana para evitarnos calvular frecuenciaPtotal y frecuenciaJtotal
+        Juegos_Gano = Juegos_Gano.map((Juego,index) => Juego.map((JJuego,iindex) => JJuego + (Juegos_Gano_Temp[index][iindex]/(index === 1 ? frecuenciaPtotal2 : index ===2 ? frecuenciaJtotal2 : 1))))
+        Juegos_Pierdo = Juegos_Pierdo.map((Juego,index) => Juego.map((JJuego,iindex) => JJuego + (Juegos_Pierdo_Temp[index][iindex]/(index === 1 ? frecuenciaPtotal2 : index ===2 ? frecuenciaJtotal2 : 1))))
+    }   
+    
+    return [Juegos_Gano.map((Juego,Index) => Juego.map((ganadas, index) => 100*ganadas/(ganadas + Juegos_Pierdo[Index][index]))),true]
+}
+
+// La función equivalente a relordenJ
+function relordenJ(L1, L2,SM=[]) {
+    let JuegoL1=L1
+    let JuegoL2=L2
+    if (Array.isArray(L1)){
+        JuegoL1 = L1.reduce((acc, carta) => acc + valor(carta), 0);
+    }
+    if (Array.isArray(L2)){
+        JuegoL2 = L2.reduce((acc, carta) => acc + valor(carta), 0);
+    }
+    if (JuegoL1 < 31 && JuegoL2 > 30) {
+        return -1;
+    } else if (JuegoL1 > 30 && JuegoL2 < 31) {
+        return 1;
+    } else if (JuegoL1 > 30 && JuegoL2 > 30) {
+        if (JuegoL1 === 31) {
+            return JuegoL2 === 31 ? Array.isArray(SM) ? 0 : SM ? 1 : -1 : 1;
+        } else if (JuegoL1 === 32) {
+            return JuegoL2 === 31 ? -1 : JuegoL2 === 32 ? Array.isArray(SM) ? 0 : SM ? 1 : -1 : 1;
+        } else {
+            return JuegoL2 === 31 || JuegoL2 === 32 ? -1 : JuegoL1 > JuegoL2 ? 1 : JuegoL1 === JuegoL2 ? Array.isArray(SM) ? 0 : SM ? 1 : -1 : -1;
+        }
+    } else {
+        return JuegoL1 > JuegoL2 ? 1 : JuegoL1 === JuegoL2 ? Array.isArray(SM) ? 0 : SM ? 1 : -1 : -1;
+    }
+}
+
+function repeticiones(Mano) {
+    let repeticiones = {};
+    for (const carta of Mano){
+        if (carta in repeticiones) {
+            repeticiones[carta] += 1;
+        } else {
+            repeticiones[carta] = 1;
+        }
+    }
+    let tipología_pares = 0;
+    for (const carta of Object.keys(repeticiones)) {
+        if (repeticiones[carta] > 1) {
+            tipología_pares += repeticiones[carta];
+        }
+    }
+    let cartasRepetidas = Object.keys(repeticiones).filter(carta => repeticiones[carta] > 1);
+    return [cartasRepetidas, tipología_pares]
+}
+
+function repet(Mano) {
+    if (!Array.isArray(Mano)){
+        Mano = JSON.parse(Mano.replace(/'/g, '"'))
+    }
+    let repeticiones = {};
+    for (const carta of Mano){
+        if (carta in repeticiones){
+            return true
+        } else {
+            repeticiones[carta] = 1;
+        }
+    }
+    return false
+}
+
+function relordenP(M1,M2,SM=[]) {
+    //Tenemos que ver si hay duplex
+    //A cada carta en set(Li) le asignamos un valor de repetición en Li
+    repesM1 = repeticiones(M1)
+    repesM2 = repeticiones(M2)
+    
+    return repesM1[1] > repesM2[1] ? 1 : repesM2[1] > repesM1[1] ? -1 : relorden(repesM1[0],repesM2[0],SM)
+}
+
+function valor_de_grande(carta,grande=true){
+    if (carta==='K' || carta==='3'){
+        return grande ? 7 : 0
+    }
+    if (carta==='Q'){
+        return grande ? 6 : 1
+    }
+    if (carta==='J'){
+        return grande ? 5 : 2
+    }
+    if (carta==='1' || carta==='2'){
+        return grande ? 0 : 7
+    }
+    else{
+        return grande ? parseInt(carta, 10)-3 : (10 - parseInt(carta, 10))
+    }
+}
+
+//L1 es mano sobre L2
+function relorden(L1, L2, SM=[], grande=true) {
+    let comparar = new Array(8).fill(0);
+    for (let i=0; i<L1.length; i++){
+        comparar[valor_de_grande(L1[i],grande)]+=1
+    }
+    for (let i=0; i<L2.length; i++){
+        comparar[valor_de_grande(L2[i],grande)]-=1
+    }
+    for (let j=7; j>-1; j--){
+        if (comparar[j]>0){
+            return 1
+        } else if(comparar[j]<0){
+            return -1
+        }
+    }
+    return Array.isArray(SM) ? 0 : SM ? 1 : -1
+}
+
+
+
+//FUNCIONES PARA PROBABILIDAD CON MUS
+
+function comb_de_1_m_varCR(r,m=4){
+    let result = (r+m-1)/(m)
+    for(let i = m-1; i>0; i--){
+        result = ((r+i-1)/i) * (result +1)
+    }
+    return result
+}
+
+function comb_de_m_con_n_combCR(n,m){
+    let result = []
+    if (m==0){
+        return result
+    }
+    for (let i=0; i<n; i++){
+        result.push([i])
+    }
+    while(result[0].length<m){
+        result = lista_adiciones_con_n_Ordenados(result,n)
+    }
+    return result
+}
+
+function lista_adiciones_con_n_Ordenados(ListaManos,n){
+    let result = []
+    let i_temp = 0
+    for (const mano of ListaManos){
+        i_temp = mano.at(-1)
+        for (let j=i_temp; j<n; j++){
+            let manonueva = [...mano]
+            manonueva.push(j)
+            result.push(manonueva)
+        }
+    }
+    if (result.length==0){
+        error
+    }
+    return result
+}
+
+function productoCartesiano(L,R){
+    result = []
+    for (const l of L){
+        for (const r of R){
+            result.push([l,r])
+        }
+    }
+    return result
+}
+
+function Cartas_no_disponibles_indeces(Mano){
+    ManoDict = {}
+    for (const carta of Mano){
+        if (carta in ManoDict){
+            ManoDict[carta] += 1 
+        } else{
+            ManoDict[carta] = 1
+        }
+    }
+    return misValores.map(carta => carta in ManoDict ? ManoDict[carta] : 0)
+}
+
+//El máximo de las que se pueden conseguir a la derecha de este
+function sumacumulada_der(LD){
+    let LS = Object.keys(LD)
+    let acc=0
+    result = {}
+    for (let i=LS.length-1;i>-1;i--){
+        result[i]=acc
+        acc += LD[LS[i]]
+    }
+    return result
+}
+
+function lista_adiciones_de_eCRb(Lista,LD,ND,j,m){
+    let result = []
+    // Nos quedan m-j espacios por rellenar, tenemos que asegurarnos de hasta donde podemos ir hacia la derecha
+    // El último i que cumple LD[i]-LLista[i]+ND[i]>m-j 
+    for (const LLista of Lista){
+        for (let k = LLista.indice; LD[k]-LLista[k]+ND[k]>m-j ; k++){
+            let nuevalista = [...LLista]
+            nuevalista[k]+=1
+            nuevalista.indice = k
+            result.push(nuevalista)
+        }
+    }
+    return result 
+}
+
+function elecciónCR_binaria(Lista0_n,m,mcomp){ // Asume Lista0_n ordenada de 0s hasta ns
+    let ListaDict = {}
+    Lista0_n.forEach((carta,index) => {
+        if (carta in ListaDict){
+            ListaDict[carta] += 1 
+        } else{
+            ListaDict[carta] = 1
+        }
+    })
+    let lista0 = Array(Object.keys(ListaDict).length).fill(0)
+    let result = [lista0]
+    if (m==0 || mcomp==0){
+        if (m==0 && mcomp==0){
+            return []
+        } else if (m==0){
+            return [[lista0,lista0.map((v,i) => ListaDict[i])]]
+        } else{
+            return [[lista0.map((v,i) => ListaDict[i]),lista0]]
+        }
+    }
+    lista0.indice=0
+    let NDict = sumacumulada_der(ListaDict)
+    for (let j=0; j<m; j++){
+        result = lista_adiciones_de_eCRb(result,ListaDict,NDict,j,m)
+    }
+    result =  result.map(Lista => [Lista, Lista.map((v,i) => ListaDict[i]-v)])
+    return result
+}
+
+function imposible_valRed(conjcartas,quitadas,valoresreducidos){
+    let frecuencia = {}
+    for (const carta of conjcartas){
+        if (carta in frecuencia){
+            frecuencia[carta]+=1
+            if ((4-quitadas[valoresreducidos[carta]])<frecuencia[carta]){
+                return true
+            }
+        } else{
+            if (quitadas[valoresreducidos[carta]]===4){
+                return true
+            }
+            frecuencia[valoresreducidos[carta]]=1
+        }
+    }
+    return false
+}
+
+//PROBABILIDAD CON MUS
+const CartasNoDisponibles = mano_amiga1.concat(mano_amiga2).concat(tiro).split('')
+    cartasDeseadas=cartasDeseadas.split('')
+    const CartasNoDisponiblesIndeces = valores.map(carta => CartasNoDisponibles.filter(c => c==carta).length)
+    const CartasDisponiblesIndeces = CartasNoDisponiblesIndeces.map(v => 4-v)
+    const cartasDeseadasDisponibles = cartasDeseadas.map(v => CartasNoDisponibles.filter(vv => vv==v))
+    //Vamos a calcular las manos reducidas
+    const ValoresReducidos = valores.filter(v => !cartasDeseadas.some(c => c==v))
+    const ValoresReducidosIndeces = valores.map(carta => cartasDeseadas.some(c => c==carta) ? 1 : 0)
+    let ValoresReducidosIndecesDict = {}
+    let ValoresReducidosIndecesDictInvers = {}
+    let ValoresDeseadosIndecesDict = {}
+    let ValoresDeseadosIndecesDictInvers = {}
+    let s = 0
+    let s1 = 0
+    ValoresReducidosIndeces.forEach((i,index) => {
+        if (i==0){
+            ValoresReducidosIndecesDict[s]=index
+            ValoresReducidosIndecesDictInvers[index]=s
+            s+=1
+        } else{
+            ValoresDeseadosIndecesDict[s1]=index
+            ValoresDeseadosIndecesDictInvers[index]=s1
+            ValoresReducidosIndecesDictInvers[index]=-1
+            s1+=1
+        }
+    });
+    const vl = valores.length
+    const vr = ValoresReducidos.length
+    const n = cartasDeseadas.length
+    const nc = 10-n
+    const m = 4
+    const manosIndecesReducidas = comb_de_m_con_n_combCR(n+1,m).map(comb => comb.filter(v => v!=n)) //Empieza con 0, n es el elemento espacio (por eso n+1 elem en total)
+    const ParesManosIndecesReducidos = productoCartesiano(manosIndecesReducidas,manosIndecesReducidas)
+    let FrecuenciasParesManosEnemigas = {}
+    let FrecuenciasParesManosEnemigasPost = {}
+    let CartasNoDisponiblesIndecesParesManosEnemigas = {}
+    let ParManoIndecesPertenece = {}
+    let nfactorialDict={}
+    //Creamos todos los pares de manos con sus frecuencias
+    for (let ParManoIndeces of ParesManosIndecesReducidos){
+        if (imposible_valRed(ParManoIndeces.flat(),CartasNoDisponiblesIndeces,ValoresReducidosIndecesDict)) continue;
+        ParManoIndeces.identificador = [cartasDeseadas.map((c,index) => ParManoIndeces[0].filter(vv => vv==index)),cartasDeseadas.map((c,index) => ParManoIndeces[1].filter(vvv => vvv==index))]
+        ParManoIndeces.probabilidad_red = 1
+        for (let i = 0; i<cartasDeseadas.length; i++){
+            for (let j = cartasDeseadasDisponibles[i]; j>=(cartasDeseadasDisponibles[i]-ParManoIndeces.identificador.reduce((acc,val) => acc+val[i],0)+1);j--){
+                ParManoIndeces.probabilidad_red*=j
+            }
+            for (let j = 1; j<=ParManoIndeces.identificador[0][i]; j++){
+                ParManoIndeces.probabilidad_red/=j
+            }
+            for (let j = 1; j<=ParManoIndeces.identificador[1][i]; j++){
+                ParManoIndeces.probabilidad_red/=j
+            }
+        }
+        let ParManoReducida = ParManoIndeces.map(manoIndeces => manoIndeces.filter(i => i!=n).map(i => cartasDeseadas[i]))
+        let mr1 = ParManoReducida[0].length
+        let mr2 = ParManoReducida[1].length
+        let ParesManosEnemigas = {}
+        let gl = 8-mr1-mr2
+        let gle1 = 4-mr1
+        for (const CartasNuevasEnemigasIndeces of comb_de_m_con_n_combCR(nc,gl)){
+            let CartasNuevasEnemigasIndecesExt = Array(vl).fill(0)
+            CartasNuevasEnemigasIndeces.forEach((v,i) => {
+                CartasNuevasEnemigasIndecesExt[ValoresReducidosIndecesDict[i]]+=v
+            });
+            ParManoIndeces.identificador.forEach(mano => mano.forEach((v,i) =>{
+                CartasNuevasEnemigasIndecesExt[ValoresDeseadosIndecesDict[i]]+=v
+            }));
+            if (imposible_valRed(CartasNuevasEnemigasIndeces,CartasNoDisponiblesIndeces,ValoresReducidosIndecesDict)) continue;
+            //Si tenemos el par k _ k3 _, el siguiente código me devuelve combinaciones de  las QQQJ7 entre me1 y me2 
+            //en forma de pares de dos listas, por ejemplo [[QQQ],[J7]], y en formato INDECES REDUCIDOS. 
+            let EleccionParticion = elecciónCR_binaria(CartasNuevasEnemigasIndeces,gle1,gl);
+            
+            for (const ParManosEnemigasRaw of EleccionParticion){
+                let ParManosEnemigasRed = ParManosEnemigasRaw.map((ManoRaw) => (ManoRaw.map((v,index) => Array(v).fill(ValoresReducidosIndecesDict[index])).flat()))
+                let ParManosEnemigasIndeces = ParManosEnemigasRaw.map(ManoRaw => Array(vl).fill(0).map((v,i) => ValoresReducidosIndecesDictInvers[i]!=-1 ? ManoRaw[ValoresReducidosIndecesDictInvers[i]] : 0))
+                let ParManosEnemigasClave = JSON.stringify(ParManosEnemigasIndeces)
+                ParManoIndecesPertenece[ParManosEnemigasClave] = ParManoIndeces.identificador
+                //Calculo Frecuencia base
+                let fb = ParManoIndeces.probabilidad_red
+                //No nos preocupamos por que algún combinatorio salga 0 o algo raro porque sabemos que la mano es posible
+                for (let i=0; i<vr; i++){
+                    let carta = ValoresReducidosIndecesDict[i]
+                    let prod = 1
+                    for (let j = CartasDisponiblesIndeces[carta]; j>=(CartasDisponiblesIndeces[carta]-ParManosEnemigasRaw.reduce((acc,mano) => acc + mano[i],0)+1);j--){ 
+                        prod*=j
+                    }
+                    let factorial1=1
+                    if (ParManosEnemigasRaw[0][i] in nfactorialDict){
+                        factorial1 = nfactorialDict[ParManosEnemigasRaw[0][i]]
+                    } else{
+                        for (let j = 1; j<=ParManosEnemigasRaw[0][i]; j++){
+                            factorial1*=j
+                        }
+                        nfactorialDict[ParManosEnemigasRaw[0][i]] = factorial1
+                    }
+                    let factorial2=1
+                    if (ParManosEnemigasRaw[1][i] in nfactorialDict){
+                        factorial2 = nfactorialDict[ParManosEnemigasRaw[1][i]]
+                    } else{
+                        for (let j = 1; j<=ParManosEnemigasRaw[1][i]; j++){
+                            factorial2*=j
+                        }
+                        nfactorialDict[ParManosEnemigasRaw[1][i]] = factorial2
+                    }
+                    fb*= (prod/(factorial1*factorial2))
+                }
+                 //Meto la Frecuencia base en el dicc
+                 FrecuenciasParesManosEnemigas[ParManosEnemigasClave] = fb
+                 CartasNoDisponiblesIndecesParesManosEnemigas[ParManosEnemigasClave] = CartasNuevasEnemigasIndecesExt
+                 FrecuenciasParesManosEnemigasPost[ParManosEnemigasClave] = 0
+                 ParesManosEnemigas[ParManosEnemigasClave] = ParManosEnemigasIndeces
+
+               
+                //Calcular Frecuencia Post con el dicc con el for
+                Object.keys(FrecuenciasParesManosEnemigas).forEach((ParManosClave,index) =>{
+                    //Actualizo mi frecuencia Post si me afecta
+                    if (ParManoIndecesPertenece[ParManosClave].every((manored,i) => manored.every((v,ii)=>v<=ParManoIndeces.identificador[i][ii]))){
+                        let fb1 = 1
+                        CartasNoDisponiblesIndecesParesManosEnemigas[ParManosClave].forEach((v,i) =>{
+                            let Num_i_invariante = i in ValoresReducidosIndecesDictInvers ? ParManoIndeces.identificador.reduce((acc,val) => acc+val[ValoresReducidosIndecesDictInvers[i]],0) : 0
+                            let tot = CartasDisponiblesIndeces[i]-v+Num_i_invariante
+                            for (let j=tot; j>=tot-ParManosEnemigasIndeces.reduce((acc,mano) => acc + mano[i],0)+1;j--){
+                                fb1*=j
+                            }
+                            let factorial1=1
+                            if ((i in ValoresDeseadosIndecesDict ? ParManosEnemigasIndeces[0][i] - ParManoIndeces.identificador[0][ValoresReducidosIndecesDictInvers[i]] : ParManosEnemigasIndeces[0][i]) in nfactorialDict){
+                                factorial1 = nfactorialDict[ParManosEnemigasIndeces[0][i]]
+                            } else{
+                                for (let j = 1; j<=ParManosEnemigasIndeces[0][i]; j++){
+                                    factorial1*=j
+                                }
+                                nfactorialDict[ParManosEnemigasIndeces[0][i]] = factorial1
+                            }
+                            let factorial2=1
+                            if (i in ValoresDeseadosIndecesDict ? ParManosEnemigasIndeces[1][i] - ParManoIndeces.identificador[1][ValoresReducidosIndecesDictInvers[i]] : ParManosEnemigasIndeces[1][i] in nfactorialDict){
+                                factorial2 = nfactorialDict[ParManosEnemigasIndeces[1][i]]
+                            } else{
+                                for (let j = 1; j<=ParManosEnemigasIndeces[1][i]; j++){
+                                    factorial2*=j
+                                }
+                                nfactorialDict[ParManosEnemigasIndeces[1][i]] = factorial2
+                            }
+                            fb1/=(factorial1*factorial2)
+                        });
+                        FrecuenciasParesManosEnemigasPost[ParManosEnemigasClave]+=fb1*FrecuenciasParesManosEnemigas[ParManosClave]
+                    }
+                    let ParManosEnemigasIndeces2 = JSON.parse(ParManosClave)
+                    //Actualizo su frecuencia Post
+                    if (ParManoIndecesPertenece[ParManosEnemigasClave].every((manored,i) => manored.every((v,ii)=>v>=ParManoIndeces.identificador[i][ii]))){
+                        let fb1 = 1
+                        CartasNoDisponiblesIndecesParesManosEnemigas[ParManosEnemigasClave].forEach((v,i) =>{
+                            let Num_i_invariante = i in ValoresReducidosIndecesDictInvers ? ParManoIndecesPertenece[ParManosClave].reduce((acc,val) => acc+val[ValoresReducidosIndecesDictInvers[i]],0) : 0
+                            let tot = CartasDisponiblesIndeces[i]-v+Num_i_invariante
+                            for (let j=tot; j>=tot-ParManosEnemigasIndeces2.reduce((acc,mano) => acc + mano[i],0)+1;j--){
+                                fb1*=j
+                            }
+                            let factorial1=1
+                            if ((i in ValoresDeseadosIndecesDict ? ParManosEnemigasIndeces2[0][i] - ParManoIndecesPertenece[ParManosClave][0][ValoresReducidosIndecesDictInvers[i]] : ParManosEnemigasIndeces2[0][i]) in nfactorialDict){
+                                factorial1 = nfactorialDict[ParManosEnemigasIndeces2[0][i]]
+                            } else{
+                                for (let j = 1; j<=ParManosEnemigasIndeces2[0][i]; j++){
+                                    factorial1*=j
+                                }
+                                nfactorialDict[ParManosEnemigasIndeces2[0][i]] = factorial1
+                            }
+                            let factorial2=1
+                            if ((i in ValoresDeseadosIndecesDict ? ParManosEnemigasIndeces2[1][i] - ParManoIndecesPertenece[ParManosClave][1][ValoresReducidosIndecesDictInvers[i]] : ParManosEnemigasIndeces2[0][i]) in nfactorialDict){
+                                factorial2 = nfactorialDict[ParManosEnemigasIndeces2[1][i]]
+                            } else{
+                                for (let j = 1; j<=ParManosEnemigasIndeces2[1][i]; j++){
+                                    factorial2*=j
+                                }
+                                nfactorialDict[ParManosEnemigasIndeces2[1][i]] = factorial2
+                            }
+                            fb1/=(factorial1*factorial2)
+                        });
+                        FrecuenciasParesManosEnemigasPost[ParManosClave]+=fb1*FrecuenciasParesManosEnemigas[ParManosEnemigasClave]
+                    }
+                })
+            }
+        }
+    }
