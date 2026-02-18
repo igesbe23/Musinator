@@ -2,6 +2,43 @@
 
 //SECCIÓN OPERACIONES RECURRENTES
 
+//rango de una matriz
+
+function rank(matrix) {
+    
+    // Get the number of rows and columns in the matrix
+    const num_rows = matrix.length;
+    const num_cols = matrix.length > 0 ? matrix[0].length : 0;
+    let rank = 0;
+
+    for (let i = 0; i < num_rows; i++) {
+        let pivot_found = false;
+
+        // Iterate over each column of the matrix
+        for (let j = 0; j < num_cols; j++) {
+            if (matrix[i][j] !== 0) {
+                pivot_found = true;
+                rank++; // Increment rank
+                for (let k = 0; k < num_rows; k++) {
+                    if (k !== i) {
+                        const ratio = 
+                            matrix[k][j] / matrix[i][j];
+                        for (let l = 0; l < num_cols; l++) {
+                            matrix[k][l] -= ratio * matrix[i][l];
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        if (!pivot_found) {
+            break;
+        }
+    }
+
+    return rank;
+}
+
 // Helper to hash arrays as strings 
 const arrayToString = (arr) => arr.join(',');
 
@@ -21,8 +58,9 @@ function insertarOrdenado(arr, num, l = 1) {
 const cacheResultados = new Map(); // Mapa para almacenar los resultados
 
 function multicombinatorio_memorizado(a, b, c, d) {
-    // Normalizamos los números (los ordenamos) y creamos una clave única
-    const clave = arrayToString([a].concat([b, c, d].sort((x, y) => x - y)))
+    // Normalizamos los números (los ordenamos) y creamos una clave única NO SUPERAN 8 LOS VALORES
+    let arr = [a,b,c,d].sort();
+    const clave = arr[0]+9*arr[1]+81*arr[2]+729*arr[3] >>> 0 // Hash IMPORTANTE, es 9 porque una coordenada es imposible que exceda 8 al ser numero de cartas.
 
     // Si el resultado ya está en el cache, lo devolvemos directamente
     if (cacheResultados.has(clave)) {
@@ -61,7 +99,8 @@ function multicombinatorio(a, b, c, d) {
 
 function multicombinatorio_memorizado5(a, b, c, d, e, f) {
     // Normalizamos los números (los ordenamos) y creamos una clave única
-    const clave = arrayToString([a].concat([b, c, d, e, f].sort((x, y) => x - y)))
+    let arr = [a,b,c,d,e,f].sort();
+    const clave = arr[0]+9*arr[1]+9^2*arr[2]+9^3*arr[3]+9^4*arr[4]+9^5*arr[5] >>> 0
 
     // Si el resultado ya está en el cache, lo devolvemos directamente
     if (cacheResultados.has(clave)) {
@@ -106,8 +145,6 @@ self.addEventListener('message', (event) => {
     // Lógica para calcular las probabilidades 
     if (type === 'initial'){
         let Probabilidades = probabilidad_mus_musipaper(manoamiga1, manoamiga2, soymano, misValoresRed);
-        let coords = Probabilidades.coords
-        let aristas = Probabilidades.aristas
         Probabilidades[1] = 'Recuerda que son sólo probabilidades'
         let FtFtIndex = Probabilidades[0].findIndex(Juego => Juego.some(JJuego => (40<JJuego) && (JJuego<60)))
         if (Probabilidades[0][0][0]<0.5 ){
@@ -138,10 +175,9 @@ self.addEventListener('message', (event) => {
             }
             
         }
-        aristas = aristas.map(arista => arista.arista);
         Probabilidades = [...Probabilidades];
         // Enviar el resultado de vuelta al hilo principal
-        self.postMessage({id, Probabilidades, coords, aristas});
+        self.postMessage({id, Probabilidades});
     } else if (type === 'sequential'){
         let Probabilidades = probabilidad_conmus(manoamiga1, manoamiga2, soymano, tiro, deseadas,  misValores)
         Probabilidades[1] = 'Recuerda que son sólo probabilidades'
@@ -304,7 +340,279 @@ function relordenP_musipaper(Cuatrimano,i,j,n_valores,soymano=[],longitudmano=4)
     }
 }
 
+//Funcion que calcula si ganas o pierdes en la configuracion respectiva puesta en forma de matriz columnas: 
+// fmax,[4-mano_amiga1.length,4-mano_amiga2.length,4,4,n_cartas_rest]
+function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores=misValoresRed,cuatrimanostotales=1){
+    const newFrec = valores[0].reduce((acc, _, i) => acc = acc * multicombinatorio5(fmax[i], Cuatrimano[i][0], Cuatrimano[i][1], Cuatrimano[i][2], Cuatrimano[i][3], Cuatrimano[i][4]),1)
+    let Cuatrimano_temp = Cuatrimano.map(row => row.slice());
+    if (cuatrimanostotales === 0){
+        console.log('hola1')
+        console.log(mano_amiga1_indeces)
+        console.log(mano_amiga2_indeces)
+        console.log(Cuatrimano_temp)
+        console.log(fmax)
+        console.log(newFrec)
+    }
+
+    for(let i=0; i<n_valores; i++){
+        Cuatrimano_temp[i][0] += mano_amiga1_indeces[i];
+        Cuatrimano_temp[i][1] += mano_amiga2_indeces[i];
+    }
+    
+
+    //Rehacemos las relaciones de orden
+    //Claro, ahora tenemos que realizar casuística
+
+    let a1e1 = relorden_musipaper(Cuatrimano_temp,0,2,n_valores,soymano);
+    let a2e2 = relorden_musipaper(Cuatrimano_temp,1,3,n_valores,soymano);
+    let e1a2 = relorden_musipaper(Cuatrimano_temp,2,1,n_valores,true);
+    let a1e2 = relorden_musipaper(Cuatrimano_temp,0,3,n_valores,true);
+    
+    if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+        Juegos_Gano[0][0] += newFrec;
+    } else {
+        Juegos_Pierdo[0][0] += newFrec;
+    }
+
+    a1e1 = relorden_musipaper(Cuatrimano_temp,0,2,n_valores,soymano,false);
+    a2e2 = relorden_musipaper(Cuatrimano_temp,1,3,n_valores,soymano,false);
+    e1a2 = relorden_musipaper(Cuatrimano_temp,2,1,n_valores,true,false);
+    a1e2 = relorden_musipaper(Cuatrimano_temp,0,3,n_valores,true,false);
+    
+    if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+        Juegos_Gano[0][1] += newFrec;
+    } else {
+        Juegos_Pierdo[0][1] += newFrec;
+    }
+    
+    a1e1 = relordenP_musipaper(Cuatrimano_temp,0,2,n_valores,soymano);
+    a2e2 = relordenP_musipaper(Cuatrimano_temp,1,3,n_valores,soymano);
+    e1a2 = relordenP_musipaper(Cuatrimano_temp,2,1,n_valores,true);
+    a1e2 = relordenP_musipaper(Cuatrimano_temp,0,3,n_valores,true);
+
+    let mano_enemiga1_pares_bool = valores[0].some((_,i) =>  Cuatrimano_temp[i][2]>1)
+    let mano_enemiga2_pares_bool = valores[0].some((_,i) =>  Cuatrimano_temp[i][3]>1)
+    
+    if (mano_enemiga1_pares_bool && !mano_enemiga2_pares_bool) {
+        if ((a1e1 >= 0) || (e1a2 === -1)) {
+            Juegos_Gano[1][0] += newFrec;
+        } else {
+            Juegos_Pierdo[1][0] += newFrec;
+        }
+    } else if (mano_enemiga2_pares_bool && !mano_enemiga1_pares_bool){
+        if ((a1e2 >= 0) || (a2e2 >= 0)) {
+            Juegos_Gano[1][1] += newFrec;
+        } else {
+            Juegos_Pierdo[1][1] += newFrec;
+        }
+    } else if (mano_enemiga1_pares_bool && mano_enemiga2_pares_bool) {
+        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+            Juegos_Gano[1][2] += newFrec;
+        } else {
+            Juegos_Pierdo[1][2] += newFrec;
+        }
+    } 
+    
+    a1e1 = relordenJ_musipaper(Cuatrimano_temp,0,2,n_valores,soymano);
+    a2e2 = relordenJ_musipaper(Cuatrimano_temp,1,3,n_valores,soymano);
+    e1a2 = relordenJ_musipaper(Cuatrimano_temp,2,1,n_valores,true);
+    a1e2 = relordenJ_musipaper(Cuatrimano_temp,0,3,n_valores,true);
+    
+    let mano_enemiga1_juego = 0;
+    let mano_enemiga2_juego = 0;
+    
+    for (let k=0; k<n_valores; k++){
+        mano_enemiga1_juego += valor_musipaper(k)*Cuatrimano_temp[k][2]
+        mano_enemiga2_juego += valor_musipaper(k)*Cuatrimano_temp[k][3]
+    }
+
+    if (mano_enemiga1_juego > 30 && mano_enemiga2_juego < 31) {
+        if ((a1e1 >= 0) || (e1a2 < 0)) {
+            Juegos_Gano[2][0] += newFrec;
+        } else {
+            Juegos_Pierdo[2][0] += newFrec;
+        }
+    } else if (mano_enemiga2_juego > 30 && mano_enemiga1_juego < 31) {
+        if ((a1e2 >= 0) || (a2e2 >= 0)) {
+            Juegos_Gano[2][1] += newFrec;
+        } else {
+            Juegos_Pierdo[2][1] += newFrec;
+        }
+    } else if (mano_enemiga1_juego > 30 && mano_enemiga2_juego > 30) {
+        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+            Juegos_Gano[2][2] += newFrec;
+        } else {
+            Juegos_Pierdo[2][2] += newFrec;
+        }
+    } else if (mano_enemiga1_juego < 31 && mano_enemiga2_juego < 31) {
+        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+            Juegos_Gano[2][3] += newFrec;
+        } else {
+            Juegos_Pierdo[2][3] += newFrec;
+        }
+    }
+    //Nota: Podríamos probar con lógica bayesiana para evitarnos calcular frecuenciaPtotal y frecuenciaJtotal
+}
+
 //Fin funciones de comparación
+
+//CLAVES DE COORDENADAS
+function getKey(coord) {
+    let key = 0n;
+    for (let val of coord) {
+        if (val>9){
+            throw new Error('Hay un punto con coordenadas demasiado grandes',coord);
+        }
+        key = key * 10n + BigInt(val);
+    }
+    return key;
+}
+
+class Uint8ArrayOf5x8Array {
+    constructor(n){
+        if (n>2500000){
+            throw new Error('Pérdida de precision para arrays > 2500000, has metido:', n) 
+        }
+        this.array = new Uint8Array(n*8*5);
+    }
+    element(idx){
+        //Devuelve el array guardado en la posición idx
+        //idx * 8 * 5 es donde empieza
+        return Array.from({length: 8},(_,i) => 
+            Array.from({length: 5}, (_,j) => 
+                this.array[40*idx+5*i+j]
+            )
+        )
+    };
+    modify_value(idx,i,j,value){
+        //Modifica el array en la posición idx, i, j
+        this.array[40*idx+5*i+j]=value;
+    }
+    modify_array(idx,array){
+        //Cambia el array en la posición idx
+        let bool=false
+        for (let i=0; i<8; i++){
+            for (let j=0; j<5; j++){
+                if (this.array[40*idx+5*i+j]!=0){
+                    bool=true
+                }
+                this.array[40*idx+5*i+j]=array[i][j];
+            }
+        }
+        if (bool){
+            console.warn('Sobreescribiendo el siguiente array sobre valor no nulo',array);
+        }
+    }
+}
+
+class TreeUint8ArrayOf5x8Array {
+    constructor(arraylength,treewidth){
+        this.tree = {};  
+        this.arraylength = arraylength;      
+        for (let i=0;i<treewidth;i++){
+            this.tree[i]= new Uint8ArrayOf5x8Array(arraylength);
+        }
+    }
+    element(idx){
+        //Devuelve el array guardado en la posición idx
+        const sidx = idx % this.arraylength;
+        return this.tree[Math.round((idx-sidx)/this.arraylength)].element(sidx)
+    };
+    modify_value(idx,i,j,value){
+        const sidx = idx % this.arraylength;
+        //Modifica el array en la posición idx, i, j
+        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_value(sidx,i,j,value);
+    }
+    modify_array(idx,array){
+        //Cambia el array en la posición idx
+        const sidx = idx % this.arraylength;
+        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_array(sidx,array);
+    }
+}
+
+class Uint8ArrayOfArray {
+    constructor(n,nested_array_size){
+        if (n*nested_array_size>100000000){
+            throw new Error('Pérdida de precision para arrays > 100000000, has metido:', n) 
+        }
+        this.array = new Uint8Array(n*nested_array_size);
+        this.nested_array_size = nested_array_size;
+    }
+    element(idx){
+        //Devuelve el array guardado en la posición idx
+        //idx * this.nested_array_size es donde empieza
+        return Array.from({length: this.nested_array_size},(_,i) => 
+            this.array[this.nested_array_size*idx+i]
+        )
+    };
+    modify_value(idx,i,value){
+        //Modifica el array en la posición idx, i
+        this.array[this.nested_array_size*idx+i]=value;
+    }
+    modify_array(idx,array){
+        //Cambia el array en la posición idx
+        let bool=false;
+        for (let i=0; i<this.nested_array_size; i++){
+            if (this.array[this.nested_array_size*idx+i]!=0){
+                bool = true;
+            }
+            this.array[this.nested_array_size*idx+i]=array[i];
+        }
+        if (bool){
+            console.warn('Sobreescribiendo el siguiente array sobre valor no nulo',array);
+        }
+    }
+}
+
+class TreeUint8ArrayOfArray{
+    constructor(arraylength,treewidth,nested_array_size){
+        this.tree = {};  
+        this.arraylength = arraylength;      
+        this.nested_array_size = nested_array_size;
+        for (let i=0;i<treewidth;i++){
+            this.tree[i]= new Uint8ArrayOfArray(arraylength,nested_array_size);
+        }
+    }
+    element(idx){
+        //Devuelve el array guardado en la posición idx
+        const sidx = idx % this.arraylength;
+        return this.tree[Math.round((idx-sidx)/this.arraylength)].element(sidx)
+    };
+    modify_value(idx,i,value){
+        //Modifica el array en la posición idx, i
+        const sidx = idx % this.arraylength;
+        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_value(sidx,i,value);
+    }
+    modify_array(idx,array){
+        //Cambia el array en la posición idx
+        const sidx = idx % this.arraylength;
+        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_array(sidx,array);
+    }
+}
+
+class TreeUint8Array{
+    constructor(arraylength,treewidth){
+        this.tree = {};  
+        this.arraylength = arraylength;      
+        for (let i=0;i<treewidth;i++){
+            this.tree[i]= new Uint8Array(arraylength);
+        }
+    }
+    element(idx){
+        //Devuelve el valor guardado en la posición idx
+        const sidx = idx % this.arraylength;
+        return this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]
+    };
+    modify_value(idx,value){
+        //Modifica el valor en la posición idx
+        const sidx = idx % this.arraylength;
+        if (this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]!=0){
+            console.warn('Sobreescribiendo el siguiente array sobre valor no nulo',array);
+        }
+        this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]=value;
+    }
+}
+//Musipaper
 
 function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valores = misValoresRed){
     mano_amiga1 = mano_amiga1.split('');
@@ -318,130 +626,86 @@ function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valo
     console.log(fmax);
     const n_cartas_rest = fmax.reduce((acc,v) => acc += v,0)-16+mano_amiga1.length+mano_amiga2.length;
     const mano_amiga1_indeces = caracteres_to_indeces(mano_amiga1,valores[0]);
-    const mano_amiga2_indeces = caracteres_to_indeces(mano_amiga1,valores[0]);
-    const Cuatrimanos = matrices(fmax,[4-mano_amiga1.length,4-mano_amiga2.length,4,4,n_cartas_rest]);
+    const mano_amiga2_indeces = caracteres_to_indeces(mano_amiga2,valores[0]);
+    // Ahora voy a recorrer el poliedro "agrandado" de manos posibles
+    //Creamos el vértice expandido
+    const vertice_obj = solVertice_extend_FL(fmax,[4-mano_amiga1.length,4-mano_amiga2.length,4,4,n_cartas_rest]);
+    //Creamos sus aristas (funcion adicion) (se fía que initialArray es un vértice y por tanto su estela es buena)
+    const Aristas = primeras_aristas_funcion_adicion_nocopy(vertice_obj.estela,vertice_obj.neg_idx);
     let Juegos_Gano=[[0,0],[0,0,0],[0,0,0,0]];
     let Juegos_Pierdo=[[0,0],[0,0,0],[0,0,0,0]];
-    Cuatrimanos.forEach((CuatrimanoRaw,idx) =>{
-        let Cuatrimano = CuatrimanoRaw
-        const Juegos_Gano_Temp=[[0,0],[0,0,0],[0,0,0,0]];
-        const Juegos_Pierdo_Temp=[[0,0],[0,0,0],[0,0,0,0]];
-        const newFrec = valores[0].reduce((acc, _, i) => acc = acc * multicombinatorio_memorizado5(fmax[i], Cuatrimano[i][0], Cuatrimano[i][1], Cuatrimano[i][2], Cuatrimano[i][3], Cuatrimano[i][4]),1)
-        
-        if (idx === 0){
-            console.log('hola1')
-            console.log(mano_amiga1_indeces)
-            console.log(mano_amiga2_indeces)
-            console.log(Cuatrimano)
-            console.log(fmax)
-            console.log(newFrec)
-        }
+    //Funfact para medir cuántas hay
+    let cuatrimanostotales= 0;
 
-        for(let i=0; i<n_valores; i++){
-            Cuatrimano[i][0] += mano_amiga1_indeces[i];
-            Cuatrimano[i][1] += mano_amiga2_indeces[i];
-        }
-        
+    //Musipaper! Hay que optimizar el procedimiento para reducir la "dimensionalidad" y en general reducir la parte del poliedro que hace falta visitar (uso de simetrias, tiene muchas)
+    //Implementa BFS con lista circular como queue
+    let Vertice = vertice_obj.vertice;
+    let arrayqueuesize = 100000; //1.000.000
+    let treewidth = 100;
+    let queuesize = Number(BigInt(arrayqueuesize)*BigInt(treewidth))
+    let arrayqueue = new TreeUint8ArrayOf5x8Array(arrayqueuesize,treewidth); //Numero de coordenadas enteras en el simplice con vértices permutaciones de [9,0,...(28 coordeanads)...,0] es de 94.143.280<100.000.000, podría bajarse varios ordenes con mejores estimaciones,
+    let sizequeue = new TreeUint8Array(arrayqueuesize,treewidth);
+    let coordqueue = new TreeUint8ArrayOfArray(arrayqueuesize,treewidth,Aristas.length);
+    // es un upperbound exagerado al tamaño de la seccion || ||_1 = algo de un poliedro en la piramide ||coordenadas||_1<= 9 a la que pertenece nuestro poliedro, por si acaso. (9 porque puede que se permita -1 en alguna entrada)
+    let head = 0, tail = 1;
+    let coord_init = new Uint8Array(Aristas.length).fill(0);   
+    arrayqueue.modify_array(head,Vertice);
+    coordqueue.modify_array(head,coord_init);
+    sizequeue.modify_value(head,0);
 
-        //Rehacemos las relaciones de orden
-        //Claro, ahora tenemos que realizar casuística
+    let norm=0;
+    let Visited = new Set;
+    let dist_head_tail = 1;
 
-        let a1e1 = relorden_musipaper(Cuatrimano,0,2,n_valores,soymano);
-        let a2e2 = relorden_musipaper(Cuatrimano,1,3,n_valores,soymano);
-        let e1a2 = relorden_musipaper(Cuatrimano,2,1,n_valores,true);
-        let a1e2 = relorden_musipaper(Cuatrimano,0,3,n_valores,true);
-        
-        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
-            Juegos_Gano_Temp[0][0] += newFrec;
-        } else {
-            Juegos_Pierdo_Temp[0][0] += newFrec;
-        }
+    while (dist_head_tail>0){
+        const array = arrayqueue.element(head);
+        const coord = coordqueue.element(head);
+        const suma = sizequeue.element(head);
 
-        a1e1 = relorden_musipaper(Cuatrimano,0,2,n_valores,soymano,false);
-        a2e2 = relorden_musipaper(Cuatrimano,1,3,n_valores,soymano,false);
-        e1a2 = relorden_musipaper(Cuatrimano,2,1,n_valores,true,false);
-        a1e2 = relorden_musipaper(Cuatrimano,0,3,n_valores,true,false);
-        
-        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
-            Juegos_Gano_Temp[0][1] += newFrec;
-        } else {
-            Juegos_Pierdo_Temp[0][1] += newFrec;
+        head = (head +1) % queuesize;
+        dist_head_tail--;
+        if (suma>norm){
+            norm = suma;
+            Visited.clear();
+        } else if (suma < norm){
+            throw new Error('No recorre de forma ordenada el poliedro');
         }
-        
-        a1e1 = relordenP_musipaper(Cuatrimano,0,2,n_valores,soymano);
-        a2e2 = relordenP_musipaper(Cuatrimano,1,3,n_valores,soymano);
-        e1a2 = relordenP_musipaper(Cuatrimano,2,1,n_valores,true);
-        a1e2 = relordenP_musipaper(Cuatrimano,0,3,n_valores,true);
-
-        let mano_enemiga1_pares_bool = valores[0].some((_,i) =>  Cuatrimano[i][2]>1)
-        let mano_enemiga2_pares_bool = valores[0].some((_,i) =>  Cuatrimano[i][3]>1)
-        
-        if (mano_enemiga1_pares_bool && !mano_enemiga2_pares_bool) {
-            if ((a1e1 >= 0) || (e1a2 === -1)) {
-                Juegos_Gano_Temp[1][0] += newFrec;
-            } else {
-                Juegos_Pierdo_Temp[1][0] += newFrec;
+        for (let i = 0; i < Aristas.length; i++) {
+            let new_coord = new Uint8Array(coord);
+            new_coord[i] += 1;
+            if (new_coord.length != Aristas.length){
+                throw new Error('Las coordenadas están cambiando de tamaño');
             }
-        } else if (mano_enemiga2_pares_bool && !mano_enemiga1_pares_bool){
-            if ((a1e2 >= 0) || (a2e2 >= 0)) {
-                Juegos_Gano_Temp[1][1] += newFrec;
-            } else {
-                Juegos_Pierdo_Temp[1][1] += newFrec;
-            }
-        } else if (mano_enemiga1_pares_bool && mano_enemiga2_pares_bool) {
-            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
-                Juegos_Gano_Temp[1][2] += newFrec;
-            } else {
-                Juegos_Pierdo_Temp[1][2] += newFrec;
-            }
-        } 
-        
-        a1e1 = relordenJ_musipaper(Cuatrimano,0,2,n_valores,soymano);
-        a2e2 = relordenJ_musipaper(Cuatrimano,1,3,n_valores,soymano);
-        e1a2 = relordenJ_musipaper(Cuatrimano,2,1,n_valores,true);
-        a1e2 = relordenJ_musipaper(Cuatrimano,0,3,n_valores,true);
-        
-        let mano_enemiga1_juego = 0;
-        let mano_enemiga2_juego = 0;
-        
-        for (let k=0; k<n_valores; k++){
-            mano_enemiga1_juego += valor_musipaper(k)*Cuatrimano[k][2]
-            mano_enemiga2_juego += valor_musipaper(k)*Cuatrimano[k][3]
+            const key = getKey(new_coord);
+            if (!Visited.has(key)){ 
+                if (Aristas[i][0](array,1,vertice_obj.neg_idx,true)){
+                    const array_new = Aristas[i][1](array);
+                    //array_new es un relleno posible 
+                    actualizar_densidad(array_new,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
+                    cuatrimanostotales++;
+                    arrayqueue.modify_array(tail,array_new);
+                    coordqueue.modify_array(tail,new_coord);
+                    sizequeue.modify_value(tail,suma+1);
+                    tail = (tail +1) % queuesize;
+                    dist_head_tail++;
+                    Visited.add(key);
+                } else if (Aristas[i][0](array,1,vertice_obj.neg_idx)){
+                    const array_new = Aristas[i][1](array);
+                    arrayqueue.modify_array(tail,array_new);
+                    coordqueue.modify_array(tail,new_coord);
+                    sizequeue.modify_value(tail,suma+1);
+                    tail = (tail +1) % queuesize;
+                    dist_head_tail++;
+                    Visited.add(key);
+                }
+            } 
         }
-
-        if (mano_enemiga1_juego > 30 && mano_enemiga2_juego < 31) {
-            if ((a1e1 >= 0) || (e1a2 < 0)) {
-                Juegos_Gano_Temp[2][0] += newFrec;
-            } else {
-                Juegos_Pierdo_Temp[2][0] += newFrec;
-            }
-        } else if (mano_enemiga2_juego > 30 && mano_enemiga1_juego < 31) {
-            if ((a1e2 >= 0) || (a2e2 >= 0)) {
-                Juegos_Gano_Temp[2][1] += newFrec;
-            } else {
-                Juegos_Pierdo_Temp[2][1] += newFrec;
-            }
-        } else if (mano_enemiga1_juego > 30 && mano_enemiga2_juego > 30) {
-            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
-                Juegos_Gano_Temp[2][2] += newFrec;
-            } else {
-                Juegos_Pierdo_Temp[2][2] += newFrec;
-            }
-        } else if (mano_enemiga1_juego < 31 && mano_enemiga2_juego < 31) {
-            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
-                Juegos_Gano_Temp[2][3] += newFrec;
-            } else {
-                Juegos_Pierdo_Temp[2][3] += newFrec;
-            }
+        if (dist_head_tail>queuesize){
+            throw new Error('El perro se mordió la cola, insuficiente longitud de lista circular: ',queuesize)
         }
-        //Nota: Podríamos probar con lógica bayesiana para evitarnos calcular frecuenciaPtotal y frecuenciaJtotal
-        Juegos_Gano = Juegos_Gano.map((Juego,index) => Juego.map((JJuego,iindex) => JJuego + (Juegos_Gano_Temp[index][iindex])))
-        Juegos_Pierdo = Juegos_Pierdo.map((Juego,index) => Juego.map((JJuego,iindex) => JJuego + (Juegos_Pierdo_Temp[index][iindex])))   
-    });
+    }
     console.log('adiós')
-    const result = [Juegos_Gano.map((Juego,Index) => Juego.map((ganadas, index) => 100*ganadas/(ganadas + Juegos_Pierdo[Index][index]))),true];
-    result.coords = Array.from(Cuatrimanos.coords).map(item => JSON.parse(item));
-    result.aristas = Cuatrimanos.aristas;
+    const result = [Juegos_Gano.map((Juego,Index) => Juego.map((ganadas, index) => 100*ganadas/(ganadas + Juegos_Pierdo[Index][index]))),true,cuatrimanostotales];
     return result;
 }
 
@@ -775,7 +1039,7 @@ function posibles_f_first_greater(s,fmax){
 }
 
 //Para las matrices, función Creamos un vértice matriz para f y l dados y su estela para calcular aristas
-function solVerticeFL(f, l) {
+function solVertice_extend_FL(f, l) {
     let EstelaMat = Array.from({ length: f.length }, () => new Array(l.length).fill(0));
     let VerticeMat = Array.from({ length: f.length }, () => new Array(l.length).fill(0));
 
@@ -858,14 +1122,23 @@ function solVerticeFL(f, l) {
         i++;
         j--;
     }
+    //Parte de extendender
+    let neg_idx = {};
+    for (let i=1; i<f.length; i++){
+        for (let j=1; j<l.length; j++){
+            if (EstelaMat[i][j]==1 && VerticeMat[i][j]==0){
+                neg_idx[JSON.stringify([i,j])]=-1;
+            }
+        }
+    }
 
-    return [VerticeMat, EstelaMat];
+    return {vertice : VerticeMat, estela : EstelaMat, neg_idx : neg_idx};
 }
 
 // Escribimos nuestro algoritmo de caminos para crear las matrices arista a partir de una matriz "completa" - algoritmo del MUSIPAPER. 
 
 // Función que obtiene las primeras aristas, cada vector arista es en realidad una función para acortar a O(n+v) de O(n*v) el proceso de sumar.
-function primeras_aristas_funcion_adicion_nocopy(V){
+function primeras_aristas_funcion_adicion_nocopy(V,neg_idx={}){
     const result = []
     const v = V.length
     const n = V[0].length
@@ -874,7 +1147,7 @@ function primeras_aristas_funcion_adicion_nocopy(V){
             if (V[i][j]===0){
                 const Arista = find_balanced_paths(V, [i,j]);
                 if (Arista[1]){
-                    const Aristafun = matrix_to_adition_nocopy(Arista[0]);
+                    const Aristafun = matrix_to_adition_nocopy(Arista[0],neg_idx);
                     Aristafun.arista = Arista[0]
                     result.push(Aristafun);
                 }
@@ -884,6 +1157,7 @@ function primeras_aristas_funcion_adicion_nocopy(V){
     return result
 }
 
+//SOLO CORRECTO PARA VERTICES ESTELA
 function find_balanced_paths(V, I) {
     // Verifica que la entrada es válida
     if (V[I[0]][I[1]] !== 0) {
@@ -995,22 +1269,37 @@ function matrix_to_adition_nocopy(M) {
         }
     }
 
-    // Devolver una función que suma M con otra matriz N
-    return [function (N,t=1){
-        for (const element of nonZeroElements){
-            // Si en algún momento va a crear un elemento negativo, no lo hagas ^-^
-            if (N[element[0]][element[1]] + t*element[2] < 0){
+    // Devolver en [0] una función que dice si la suma de M con otra matriz N es válida (nonegativa excepto en los indices de neg_idx donde es mayor que -1)
+    // y en [1] una función que suma M con otra matriz N primero realizando un deepcopy de N
+    return [function (N,t=1,neg_idx={},reviewnoneg=false){
+        if (reviewnoneg){
+            for (const element of nonZeroElements){
+                if (N[element[0]][element[1]] + t*element[2] < 0){
+                    return false;
+                }
+            }
+        } else{
+            for (const element of nonZeroElements){
+            // Si en algún momento va a crear un elemento mas negativo que lo indicado en neg_idx
+            // (si no estas como clave en neg_idx es porque tienes que ser >= 0), no lo hagas ^-^
+            if (neg_idx[JSON.stringify([element[0],element[1]])]){
+                if (N[element[0]][element[1]] + t*element[2] < neg_idx[JSON.stringify([element[0],element[1]])]){
+                    return false;
+                }   
+            } else if (N[element[0]][element[1]] + t*element[2] < 0){
                 return false;
             }
+        }
         }
         return true;
         }
         , function (N,t=1) {
         // Sumar los elementos no nulos de M a la matriz N
+        let NN = N.map(row => row.slice());
         for (const element of nonZeroElements) {
-            N[element[0]][element[1]] += t*element[2];
+            NN[element[0]][element[1]] += t*element[2];
         }
-        return N;
+        return NN;
     }]
 }
 
