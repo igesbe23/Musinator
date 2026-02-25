@@ -67,7 +67,7 @@ setInterval(createCard, 500);
 // script.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    let inputCounter = 1; // Contador para controlar los inputs dinámicos
+    //let inputCounter = 1; Contador para controlar los inputs dinámicos
     const inputContainersDiv = document.getElementById('input-containers');
 
     // Crear un nuevo Web Worker
@@ -156,12 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(`sendButton-1`).addEventListener('click', () => {
         handleSendButtonClick(`sendButton-1`, `textInput-1`, `response-box-1`);
     });
-    if(inputCounter !== 1){
+    //if(inputCounter !== 1){
         // Añadir evento click al primer botón
-        document.getElementById(`sendButton-${inputCounter}`).addEventListener('click', () => {
-            handleSendButtonClick(`sendButton-${inputCounter}`, `textInput-${inputCounter}`, `response-box-${inputCounter}`);
-        }); 
-    }
+    //    document.getElementById(`sendButton-${inputCounter}`).addEventListener('click', () => {
+    //        handleSendButtonClick(`sendButton-${inputCounter}`, `textInput-${inputCounter}`, `response-box-${inputCounter}`);
+    //    }); 
+    //}
 
     // Recibir la respuesta del Web Worker
     worker.addEventListener('message', (event) => {
@@ -191,8 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
             MisProbabilidades.innerHTML = responseMessage;
         }
 
-        if (inputCounter < 2) {
-            inputCounter++;
+        if (inputCounter < 2 & 0==1) { //Desactivado el segundo botón porque no hay mus nunca
+            inputCounter++; 
             const newInputHTML = `
                 <div class="user-input" id="input-${inputCounter}">
                     <h2>Feeling Lucky</h2>
