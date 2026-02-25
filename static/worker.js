@@ -607,7 +607,7 @@ class TreeUint8Array{
         //Modifica el valor en la posición idx
         const sidx = idx % this.arraylength;
         if (this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]!=0){
-            console.warn('Sobreescribiendo el siguiente array sobre valor no nulo',array);
+            console.warn('Sobreescribiendo el siguiente valor sobre valor no nulo',value);
         }
         this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]=value;
     }
@@ -634,19 +634,19 @@ function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valo
     const Aristas = primeras_aristas_funcion_adicion_nocopy(vertice_obj.estela,vertice_obj.neg_idx);
     let Juegos_Gano=[[0,0],[0,0,0],[0,0,0,0]];
     let Juegos_Pierdo=[[0,0],[0,0,0],[0,0,0,0]];
+    //Musipaper! Hay que optimizar el procedimiento para reducir la "dimensionalidad" y en general reducir la parte del poliedro que hace falta visitar (uso de simetrias, tiene muchas)
     //Funfact para medir cuántas hay
     let cuatrimanostotales= 0;
 
-    //Musipaper! Hay que optimizar el procedimiento para reducir la "dimensionalidad" y en general reducir la parte del poliedro que hace falta visitar (uso de simetrias, tiene muchas)
     //Implementa BFS con lista circular como queue
     let Vertice = vertice_obj.vertice;
-    let arrayqueuesize = 100000; //1.000.000
+    let arrayqueuesize = 100000;
     let treewidth = 100;
     let queuesize = Number(BigInt(arrayqueuesize)*BigInt(treewidth))
-    let arrayqueue = new TreeUint8ArrayOf5x8Array(arrayqueuesize,treewidth); //Numero de coordenadas enteras en el simplice con vértices permutaciones de [9,0,...(28 coordeanads)...,0] es de 94.143.280<100.000.000, podría bajarse varios ordenes con mejores estimaciones,
+    let arrayqueue = new TreeUint8ArrayOf5x8Array(arrayqueuesize,treewidth); 
     let sizequeue = new TreeUint8Array(arrayqueuesize,treewidth);
     let coordqueue = new TreeUint8ArrayOfArray(arrayqueuesize,treewidth,Aristas.length);
-    // es un upperbound exagerado al tamaño de la seccion || ||_1 = algo de un poliedro en la piramide ||coordenadas||_1<= 9 a la que pertenece nuestro poliedro, por si acaso. (9 porque puede que se permita -1 en alguna entrada)
+    // queuesize es un upperbound exagerado al tamaño de la seccion || ||_1 = algo... de un poliedro en la piramide ||coordenadas||_1<= 9 a la que pertenece nuestro poliedro, por si acaso. (9 porque puede que se permita -1 en alguna entrada)
     let head = 0, tail = 1;
     let coord_init = new Uint8Array(Aristas.length).fill(0);   
     arrayqueue.modify_array(head,Vertice);
@@ -678,8 +678,8 @@ function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valo
             }
             const key = getKey(new_coord);
             if (!Visited.has(key)){ 
-                if (Aristas[i][0](array,1,vertice_obj.neg_idx,true)){
-                    const array_new = Aristas[i][1](array);
+                const array_new = Aristas[i].addto(array);
+                if (array_new.every(row=> row.every(v=> v>= 0))){
                     //array_new es un relleno posible 
                     actualizar_densidad(array_new,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
                     cuatrimanostotales++;
@@ -689,8 +689,11 @@ function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valo
                     tail = (tail +1) % queuesize;
                     dist_head_tail++;
                     Visited.add(key);
-                } else if (Aristas[i][0](array,1,vertice_obj.neg_idx)){
-                    const array_new = Aristas[i][1](array);
+                } else if (array_new.every((row,i)=> 
+                        row.every((v,j)=> 
+                            v>= vertice_obj.neg_idx[JSON.stringify([i,j])]
+                        )
+                    )){
                     arrayqueue.modify_array(tail,array_new);
                     coordqueue.modify_array(tail,new_coord);
                     sizequeue.modify_value(tail,suma+1);
@@ -1128,6 +1131,8 @@ function solVertice_extend_FL(f, l) {
         for (let j=1; j<l.length; j++){
             if (EstelaMat[i][j]==1 && VerticeMat[i][j]==0){
                 neg_idx[JSON.stringify([i,j])]=-1;
+            } else{
+                neg_idx[JSON.stringify([i,j])]=-0;
             }
         }
     }
@@ -1138,7 +1143,7 @@ function solVertice_extend_FL(f, l) {
 // Escribimos nuestro algoritmo de caminos para crear las matrices arista a partir de una matriz "completa" - algoritmo del MUSIPAPER. 
 
 // Función que obtiene las primeras aristas, cada vector arista es en realidad una función para acortar a O(n+v) de O(n*v) el proceso de sumar.
-function primeras_aristas_funcion_adicion_nocopy(V,neg_idx={}){
+function primeras_aristas_funcion_adicion_nocopy(V){
     const result = []
     const v = V.length
     const n = V[0].length
@@ -1147,9 +1152,9 @@ function primeras_aristas_funcion_adicion_nocopy(V,neg_idx={}){
             if (V[i][j]===0){
                 const Arista = find_balanced_paths(V, [i,j]);
                 if (Arista[1]){
-                    const Aristafun = matrix_to_adition_nocopy(Arista[0],neg_idx);
-                    Aristafun.arista = Arista[0]
-                    result.push(Aristafun);
+                    const arista = Arista[0];
+                    arista.addto = matrix_to_adition_nocopy(Arista[0])
+                    result.push(arista);
                 }
             }
         }
@@ -1271,36 +1276,14 @@ function matrix_to_adition_nocopy(M) {
 
     // Devolver en [0] una función que dice si la suma de M con otra matriz N es válida (nonegativa excepto en los indices de neg_idx donde es mayor que -1)
     // y en [1] una función que suma M con otra matriz N primero realizando un deepcopy de N
-    return [function (N,t=1,neg_idx={},reviewnoneg=false){
-        if (reviewnoneg){
-            for (const element of nonZeroElements){
-                if (N[element[0]][element[1]] + t*element[2] < 0){
-                    return false;
-                }
-            }
-        } else{
-            for (const element of nonZeroElements){
-            // Si en algún momento va a crear un elemento mas negativo que lo indicado en neg_idx
-            // (si no estas como clave en neg_idx es porque tienes que ser >= 0), no lo hagas ^-^
-            if (neg_idx[JSON.stringify([element[0],element[1]])]){
-                if (N[element[0]][element[1]] + t*element[2] < neg_idx[JSON.stringify([element[0],element[1]])]){
-                    return false;
-                }   
-            } else if (N[element[0]][element[1]] + t*element[2] < 0){
-                return false;
-            }
-        }
-        }
-        return true;
-        }
-        , function (N,t=1) {
+    return function (N,t=1) {
         // Sumar los elementos no nulos de M a la matriz N
         let NN = N.map(row => row.slice());
         for (const element of nonZeroElements) {
             NN[element[0]][element[1]] += t*element[2];
         }
         return NN;
-    }]
+    }
 }
 
 // Y devolver el conjunto de las matrices dados f y l

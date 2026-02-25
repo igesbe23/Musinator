@@ -108,3 +108,28 @@
             engine.runRenderLoop(() => {
                 scene.render();
             });
+
+//DEL MUSINATOR PROPPER 
+[function (N,t=1,neg_idx={},reviewnoneg=false){
+        if (reviewnoneg){
+            for (const element of nonZeroElements){
+                if (N[element[0]][element[1]] + t*element[2] < 0){
+                    return false;
+                }
+            }
+        } else{
+            for (const element of nonZeroElements){
+            // Si en algún momento va a crear un elemento mas negativo que lo indicado en neg_idx
+            // (si no estas como clave en neg_idx es porque tienes que ser >= 0), no lo hagas ^-^
+            if (neg_idx[JSON.stringify([element[0],element[1]])]){
+                if (N[element[0]][element[1]] + t*element[2] < neg_idx[JSON.stringify([element[0],element[1]])]){
+                    return false;
+                }   
+            } else if (N[element[0]][element[1]] + t*element[2] < 0){
+                return false;
+            }
+        }
+        }
+        return true;
+        }
+        , 
