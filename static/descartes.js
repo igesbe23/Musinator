@@ -133,3 +133,102 @@
         return true;
         }
         , 
+
+// Y devolver el conjunto de las matrices dados f y l
+//ROTO POR EL CAMBIO EN ADITION NO COPY 
+function matrices(f,l){
+    if (2>f.length || 2>l.length){
+        throw new Error('Checkeate las dimensiones heig, v,n>1');
+    }
+    if (f.reduce((acc,v) => acc += v,0) !== l.reduce((acc,v) => acc+=v,0)){
+        console.log(f,l)
+        throw new Error('l y f no suman lo mismo (you re cooked)')
+    }
+    //Creamos el vértice
+    const initialArray = solVerticeFL(f,l);
+    //Creamos sus aristas (funcion adicion) (se fía que initialArray es un vértice y por tanto su estela es buena)
+    const aristas = primeras_aristas_funcion_adicion_nocopy(initialArray[1]);
+    const n_aristas = aristas.length;
+    const initialCoordinates = Array(n_aristas).fill(0)
+
+    const queue = [];
+    const visited = new Set();
+
+    // Helper to hash arrays as strings for visited set
+    const arrayToString = (arr) => JSON.stringify(arr);
+    
+    // Start BFS with the initial array
+    queue.push({ arrayidx: 0, coordinates: initialCoordinates });
+    visited.add(arrayToString(initialCoordinates));
+    initialArray[0].f = f;
+    initialArray[0].l = l;
+    const result = [initialArray[0]];
+
+    while (queue.length > 0) {
+        const { arrayidx, coordinates } = queue.shift();
+
+        // Try adding each step
+        for (let i = 0; i < n_aristas; i++) {
+            if (! aristas[i][0](result[arrayidx])) continue;
+            // Add the new array to the result
+            const newCoordinates = [...coordinates];
+            newCoordinates[i] += 1;
+        
+            // Check if the new array is not visited
+            if (!visited.has(arrayToString(newCoordinates))) {
+                result.push( JSON.parse(JSON.stringify(result[arrayidx])) );
+                result[result.length-1] = aristas[i][1](result[result.length-1]);
+                queue.push({ arrayidx: result.length-1, coordinates: newCoordinates });
+                visited.add(arrayToString(newCoordinates));
+            }
+        }
+    }
+    result.coords = visited;
+    result.aristas = aristas;
+    result.initialvert = initialArray
+    return result;
+}
+
+//FINALMENTE, THE MOMENT YOU'VE BEEN WAITING FOR: la implementación completa del código que para un fmax, lmax y s dados devuelve el conjunto de matrices que cumplen
+
+function matrices_sumaFL(fmax,lmax,s){
+    //Edging Cases
+    if (fmax.length===1){
+        return posibles_f(s,lmax).map(vect => [vect]);
+    } else if (lmax.length===1){
+        //Traspondremos para ser felices
+        return posibles_f(s,fmax).map(vect => vect.map(val => [val]));
+    } else if (fmax.length===0 || lmax.length===0){
+        //Lol
+        return []
+    }
+    let result = [];
+    const f_posible = posibles_f(s,fmax);
+    const l_posible = posibles_f(s,lmax);
+    for (let i = 0; i<f_posible.length; i++){
+        for (let j = 0; j<l_posible.length; j++){
+            result = result.concat(matrices(f_posible[i],l_posible[j]));
+        }
+    }
+    return result;
+}
+
+function matrices_Lfijo(fmax,lmax){
+    const s = lmax.reduce((acc,v) => acc += v,0)
+    //Edging Cases
+    if (fmax.length===1){
+        return [lmax];
+    } else if (lmax.length===1){
+        //Traspondremos para ser felices
+        return fmax.map(val => [val]);
+    } else if (fmax.length===0 || lmax.length===0){
+        //Lol
+        return []
+    }
+    let result = [];
+    const f_posible = posibles_f(s,fmax);
+    for (let i = 0; i<f_posible.length; i++){
+        result = result.concat(matrices(f_posible[i],lmax));
+    }
+    return result;
+}

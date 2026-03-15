@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             MisProbabilidades.innerHTML = responseMessage;
         }
 
-        if (inputCounter < 2 & 0==1) { //Desactivado el segundo botón porque no hay mus nunca
+        if (0==1) { //Desactivado el segundo botón porque no hay mus nunca
             inputCounter++; 
             const newInputHTML = `
                 <div class="user-input" id="input-${inputCounter}">

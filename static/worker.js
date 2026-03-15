@@ -46,7 +46,7 @@ const arrayToString = (arr) => arr.join(',');
 function insertarOrdenado(arr, num, l = 1) {
     let i = 0;
     // Encontramos la posición adecuada para insertar
-    while (i < arr.length && arr[i] < num) {
+    while (i < arr.length & arr[i] < num) {
         i++;
     }
     // Insertamos `num` en la posición correcta `l` veces
@@ -146,7 +146,7 @@ self.addEventListener('message', (event) => {
     if (type === 'initial'){
         let Probabilidades = probabilidad_mus_musipaper(manoamiga1, manoamiga2, soymano, misValoresRed);
         Probabilidades[1] = 'Recuerda que son sólo probabilidades'
-        let FtFtIndex = Probabilidades[0].findIndex(Juego => Juego.some(JJuego => (40<JJuego) && (JJuego<60)))
+        let FtFtIndex = Probabilidades[0].findIndex(Juego => Juego.some(JJuego => (40<JJuego) & (JJuego<60)))
         if (Probabilidades[0][0][0]<0.5 ){
             if (Probabilidades[0][0][1]>90){
                 Probabilidades[1] = FrasesChica[Math.floor(Math.random() * FrasesChica.length)]
@@ -157,7 +157,7 @@ self.addEventListener('message', (event) => {
             }
         } else if (FtFtIndex != -1){
             if (FtFtIndex === 0){
-                if (Probabilidades[0][0].findIndex(JJuego => (40<JJuego) && (JJuego<60))==0){
+                if (Probabilidades[0][0].findIndex(JJuego => (40<JJuego) & (JJuego<60))==0){
                     Probabilidades[1] = 'Fifti Fifti a Grande'
                 } else{
                     Probabilidades[1] = 'Fifti Fifti a Chica'
@@ -181,7 +181,7 @@ self.addEventListener('message', (event) => {
     } else if (type === 'sequential'){
         let Probabilidades = probabilidad_conmus(manoamiga1, manoamiga2, soymano, tiro, deseadas,  misValores)
         Probabilidades[1] = 'Recuerda que son sólo probabilidades'
-        let FtFtIndex = Probabilidades[0].findIndex(Juego => Juego.some(JJuego => (40<JJuego) && (JJuego<60)))
+        let FtFtIndex = Probabilidades[0].findIndex(Juego => Juego.some(JJuego => (40<JJuego) & (JJuego<60)))
         if (Probabilidades[0][0][0]<0.5 ){
             if (Probabilidades[0][0][1]>90){
                 Probabilidades[1] = FrasesChica[Math.floor(Math.random() * FrasesChica.length)]
@@ -192,7 +192,7 @@ self.addEventListener('message', (event) => {
             }
         } else if (FtFtIndex != -1){
             if (FtFtIndex === 0){
-                if (Probabilidades[0][0].findIndex(JJuego => (40<JJuego) && (JJuego<60))==0){
+                if (Probabilidades[0][0].findIndex(JJuego => (40<JJuego) & (JJuego<60))==0){
                     Probabilidades[1] = 'Fifti Fifti a Grande'
                 } else{
                     Probabilidades[1] = 'Fifti Fifti a Chica'
@@ -219,7 +219,7 @@ self.addEventListener('message', (event) => {
 const FrasesPerder = ['Compañero, ¡abre el paraguas!','A ver si deja de llover','Juego con Gaitas']
 const FrasesPares = ['¡Cómo chopos!']
 const FrasesChica = ['Jugador de chica perdedor de mus']
-const FrasesGanar = ['les vamos a dar clases a esta pareja','Me juego la Naval Entera','Apriétate a la silla que vamos a levantar esto','Demasiado cortas tiene las patas el gorrión para bailar con la urraca']
+const FrasesGanar = ['Les vamos a dar clases a esta pareja','Me juego la Naval Entera','Apriétate a la silla que vamos a levantar esto','Demasiado cortas tiene las patas el gorrión para bailar con la urraca']
 const misValores = ['K', '3', 'Q', 'J', '7', '6', '5', '4', '2', '1'];
 const misValoresRed = [['K', 'Q', 'J', '7', '6', '5', '4','1'],[8,4,4,4,4,4,4,8]];
 
@@ -251,11 +251,11 @@ function relordenJ_musipaper(Cuatrimano,i,j,n_valores,soymano=[]){
         Juego_i += valor_musipaper(k)*Cuatrimano[k][i]
         Juego_j += valor_musipaper(k)*Cuatrimano[k][j]
     }
-    if (Juego_i < 31 && Juego_j > 30) {
+    if (Juego_i < 31 & Juego_j > 30) {
         return -1;
-    } else if (Juego_i > 30 && Juego_j < 31) {
+    } else if (Juego_i > 30 & Juego_j < 31) {
         return 1;
-    } else if (Juego_i > 30 && Juego_j > 30) {
+    } else if (Juego_i > 30 & Juego_j > 30) {
         if (Juego_i === 31) {
             return Juego_j === 31 ? Array.isArray(soymano) ? 0 : soymano ? 1 : -1 : 1;
         } else if (Juego_i === 32) {
@@ -353,7 +353,7 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
         console.log(fmax)
         console.log(newFrec)
     }
-
+    
     for(let i=0; i<n_valores; i++){
         Cuatrimano_temp[i][0] += mano_amiga1_indeces[i];
         Cuatrimano_temp[i][1] += mano_amiga2_indeces[i];
@@ -368,7 +368,7 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
     let e1a2 = relorden_musipaper(Cuatrimano_temp,2,1,n_valores,true);
     let a1e2 = relorden_musipaper(Cuatrimano_temp,0,3,n_valores,true);
     
-    if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+    if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
         Juegos_Gano[0][0] += newFrec;
     } else {
         Juegos_Pierdo[0][0] += newFrec;
@@ -379,7 +379,7 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
     e1a2 = relorden_musipaper(Cuatrimano_temp,2,1,n_valores,true,false);
     a1e2 = relorden_musipaper(Cuatrimano_temp,0,3,n_valores,true,false);
     
-    if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+    if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
         Juegos_Gano[0][1] += newFrec;
     } else {
         Juegos_Pierdo[0][1] += newFrec;
@@ -393,20 +393,20 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
     let mano_enemiga1_pares_bool = valores[0].some((_,i) =>  Cuatrimano_temp[i][2]>1)
     let mano_enemiga2_pares_bool = valores[0].some((_,i) =>  Cuatrimano_temp[i][3]>1)
     
-    if (mano_enemiga1_pares_bool && !mano_enemiga2_pares_bool) {
+    if (mano_enemiga1_pares_bool & !mano_enemiga2_pares_bool) {
         if ((a1e1 >= 0) || (e1a2 === -1)) {
             Juegos_Gano[1][0] += newFrec;
         } else {
             Juegos_Pierdo[1][0] += newFrec;
         }
-    } else if (mano_enemiga2_pares_bool && !mano_enemiga1_pares_bool){
+    } else if (mano_enemiga2_pares_bool & !mano_enemiga1_pares_bool){
         if ((a1e2 >= 0) || (a2e2 >= 0)) {
             Juegos_Gano[1][1] += newFrec;
         } else {
             Juegos_Pierdo[1][1] += newFrec;
         }
-    } else if (mano_enemiga1_pares_bool && mano_enemiga2_pares_bool) {
-        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+    } else if (mano_enemiga1_pares_bool & mano_enemiga2_pares_bool) {
+        if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
             Juegos_Gano[1][2] += newFrec;
         } else {
             Juegos_Pierdo[1][2] += newFrec;
@@ -426,26 +426,26 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
         mano_enemiga2_juego += valor_musipaper(k)*Cuatrimano_temp[k][3]
     }
 
-    if (mano_enemiga1_juego > 30 && mano_enemiga2_juego < 31) {
+    if (mano_enemiga1_juego > 30 & mano_enemiga2_juego < 31) {
         if ((a1e1 >= 0) || (e1a2 < 0)) {
             Juegos_Gano[2][0] += newFrec;
         } else {
             Juegos_Pierdo[2][0] += newFrec;
         }
-    } else if (mano_enemiga2_juego > 30 && mano_enemiga1_juego < 31) {
+    } else if (mano_enemiga2_juego > 30 & mano_enemiga1_juego < 31) {
         if ((a1e2 >= 0) || (a2e2 >= 0)) {
             Juegos_Gano[2][1] += newFrec;
         } else {
             Juegos_Pierdo[2][1] += newFrec;
         }
-    } else if (mano_enemiga1_juego > 30 && mano_enemiga2_juego > 30) {
-        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+    } else if (mano_enemiga1_juego > 30 & mano_enemiga2_juego > 30) {
+        if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
             Juegos_Gano[2][2] += newFrec;
         } else {
             Juegos_Pierdo[2][2] += newFrec;
         }
-    } else if (mano_enemiga1_juego < 31 && mano_enemiga2_juego < 31) {
-        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+    } else if (mano_enemiga1_juego < 31 & mano_enemiga2_juego < 31) {
+        if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
             Juegos_Gano[2][3] += newFrec;
         } else {
             Juegos_Pierdo[2][3] += newFrec;
@@ -456,163 +456,93 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
 
 //Fin funciones de comparación
 
-//CLAVES DE COORDENADAS
-function getKey(coord) {
-    let key = 0n;
-    for (let val of coord) {
-        if (val>9){
-            throw new Error('Hay un punto con coordenadas demasiado grandes',coord);
-        }
-        key = key * 10n + BigInt(val);
-    }
-    return key;
-}
-
-class Uint8ArrayOf5x8Array {
-    constructor(n){
-        if (n>2500000){
-            throw new Error('Pérdida de precision para arrays > 2500000, has metido:', n) 
-        }
-        this.array = new Uint8Array(n*8*5);
-    }
-    element(idx){
-        //Devuelve el array guardado en la posición idx
-        //idx * 8 * 5 es donde empieza
-        return Array.from({length: 8},(_,i) => 
-            Array.from({length: 5}, (_,j) => 
-                this.array[40*idx+5*i+j]
-            )
-        )
-    };
-    modify_value(idx,i,j,value){
-        //Modifica el array en la posición idx, i, j
-        this.array[40*idx+5*i+j]=value;
-    }
-    modify_array(idx,array){
-        //Cambia el array en la posición idx
-        let bool=false
-        for (let i=0; i<8; i++){
-            for (let j=0; j<5; j++){
-                if (this.array[40*idx+5*i+j]!=0){
-                    bool=true
-                }
-                this.array[40*idx+5*i+j]=array[i][j];
-            }
-        }
-        if (bool){
-            console.warn('Sobreescribiendo el siguiente array sobre valor no nulo',array);
-        }
-    }
-}
-
-class TreeUint8ArrayOf5x8Array {
-    constructor(arraylength,treewidth){
-        this.tree = {};  
-        this.arraylength = arraylength;      
-        for (let i=0;i<treewidth;i++){
-            this.tree[i]= new Uint8ArrayOf5x8Array(arraylength);
-        }
-    }
-    element(idx){
-        //Devuelve el array guardado en la posición idx
-        const sidx = idx % this.arraylength;
-        return this.tree[Math.round((idx-sidx)/this.arraylength)].element(sidx)
-    };
-    modify_value(idx,i,j,value){
-        const sidx = idx % this.arraylength;
-        //Modifica el array en la posición idx, i, j
-        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_value(sidx,i,j,value);
-    }
-    modify_array(idx,array){
-        //Cambia el array en la posición idx
-        const sidx = idx % this.arraylength;
-        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_array(sidx,array);
-    }
-}
-
-class Uint8ArrayOfArray {
-    constructor(n,nested_array_size){
-        if (n*nested_array_size>100000000){
-            throw new Error('Pérdida de precision para arrays > 100000000, has metido:', n) 
-        }
-        this.array = new Uint8Array(n*nested_array_size);
-        this.nested_array_size = nested_array_size;
-    }
-    element(idx){
-        //Devuelve el array guardado en la posición idx
-        //idx * this.nested_array_size es donde empieza
-        return Array.from({length: this.nested_array_size},(_,i) => 
-            this.array[this.nested_array_size*idx+i]
-        )
-    };
-    modify_value(idx,i,value){
-        //Modifica el array en la posición idx, i
-        this.array[this.nested_array_size*idx+i]=value;
-    }
-    modify_array(idx,array){
-        //Cambia el array en la posición idx
-        let bool=false;
-        for (let i=0; i<this.nested_array_size; i++){
-            if (this.array[this.nested_array_size*idx+i]!=0){
-                bool = true;
-            }
-            this.array[this.nested_array_size*idx+i]=array[i];
-        }
-        if (bool){
-            console.warn('Sobreescribiendo el siguiente array sobre valor no nulo',array);
-        }
-    }
-}
-
-class TreeUint8ArrayOfArray{
-    constructor(arraylength,treewidth,nested_array_size){
-        this.tree = {};  
-        this.arraylength = arraylength;      
-        this.nested_array_size = nested_array_size;
-        for (let i=0;i<treewidth;i++){
-            this.tree[i]= new Uint8ArrayOfArray(arraylength,nested_array_size);
-        }
-    }
-    element(idx){
-        //Devuelve el array guardado en la posición idx
-        const sidx = idx % this.arraylength;
-        return this.tree[Math.round((idx-sidx)/this.arraylength)].element(sidx)
-    };
-    modify_value(idx,i,value){
-        //Modifica el array en la posición idx, i
-        const sidx = idx % this.arraylength;
-        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_value(sidx,i,value);
-    }
-    modify_array(idx,array){
-        //Cambia el array en la posición idx
-        const sidx = idx % this.arraylength;
-        this.tree[Math.round((idx-sidx)/this.arraylength)].modify_array(sidx,array);
-    }
-}
-
-class TreeUint8Array{
-    constructor(arraylength,treewidth){
-        this.tree = {};  
-        this.arraylength = arraylength;      
-        for (let i=0;i<treewidth;i++){
-            this.tree[i]= new Uint8Array(arraylength);
-        }
-    }
-    element(idx){
-        //Devuelve el valor guardado en la posición idx
-        const sidx = idx % this.arraylength;
-        return this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]
-    };
-    modify_value(idx,value){
-        //Modifica el valor en la posición idx
-        const sidx = idx % this.arraylength;
-        if (this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]!=0){
-            console.warn('Sobreescribiendo el siguiente valor sobre valor no nulo',value);
-        }
-        this.tree[Math.round((idx-sidx)/this.arraylength)][sidx]=value;
-    }
-}
 //Musipaper
+function LGconsec(v,n,i,j){
+    if (j==n-1){
+        if (i==v-1){
+            throw new Error('No hay posible consecutivo lexicográfico')
+        }
+        return [i+1,0];
+    } else{
+        return [i,j+1];
+    }
+}
+function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,ascend='split',Aristas=undefined) {
+    //Vertice es un vértice de la frontera "virtual" F_{<_LG(i,j)} (MENOR ESTRICTO)
+    //Actualizamos densidades en los casos base
+    if (i==v-1 & j==n-1){ //No debería entrar nunca aquí
+        actualizar_densidad(Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
+        console.warn('La condición base usual ha fallado',Vertice);
+        return cuatrimanostotales + 1;
+    }
+    if (Aristas==undefined){
+        Aristas = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j]);
+        let dummy = 1;
+    }
+    if (Aristas.length==0){
+        actualizar_densidad(Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
+        return cuatrimanostotales + 1;
+    } else{ //Aplicamos algoritmo del simplex, si Vertice(i,j) es maximal entonces negativa si es minimal positiva. Aristas.one es una arista con (i,j)=1
+    //Mandamos un camino ascendente y uno descendente
+        let arista_max = undefined;
+        let arista_min = undefined;
+        let Aristas_new = [];
+        Aristas.forEach(arista=>{
+            let jj=0;
+            for (let ii=0;ii<i || (ii==i & jj<j); (jj==n-1) ? [ii,jj]=[ii+1,0] : [ii,jj]=[ii,jj+1]){
+                if (arista.arista[ii][jj]!=0){
+                    return;
+                }
+            }
+            Aristas_new.push(arista);
+            if (arista.arista[i][j]==1){
+                arista_max=arista;
+                return;
+            } else if (arista.arista[i][j]==-1){
+                arista_min=arista;
+                return;
+            } 
+        })
+        const Inew = LGconsec(v,n,i,j);
+        cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',Aristas_new);    
+        if ((!arista_max) & (!arista_min)) return cuatrimanostotales;
+        if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
+            const max_add = arista_max.maxadd(Vertice);
+            for (let l=1;l<max_add;l++){
+                const new_vertice = arista_max.addto(Vertice,l);
+                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'ascend');
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+            if (max_add>0){
+                const new_vertice = arista_max.addto(Vertice,max_add);
+                cuatrimanostotales = parametrizar(v,n,i,j,new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'ascend');
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+        }
+        if (arista_min!=undefined & (ascend=='split'||ascend=='descend')){
+            const max_sub = arista_min.maxadd(Vertice);
+            for (let l=1;l<max_sub;l++){
+                const new_vertice = arista_min.addto(Vertice,l);
+                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'descend');
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+            if (max_sub>0){
+                const new_vertice = arista_min.addto(Vertice,max_sub);
+                cuatrimanostotales = parametrizar(v,n,i,j,new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'descend');
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+        }
+    }
+    return cuatrimanostotales;
+}
 
 function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valores = misValoresRed){
     mano_amiga1 = mano_amiga1.split('');
@@ -631,88 +561,21 @@ function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valo
     //Creamos el vértice expandido
     const vertice_obj = solVertice_extend_FL(fmax,[4-mano_amiga1.length,4-mano_amiga2.length,4,4,n_cartas_rest]);
     //Creamos sus aristas (funcion adicion) (se fía que initialArray es un vértice y por tanto su estela es buena)
-    const Aristas = primeras_aristas_funcion_adicion_nocopy(vertice_obj.estela,vertice_obj.neg_idx);
+    let Vertice = vertice_obj.vertice;
     let Juegos_Gano=[[0,0],[0,0,0],[0,0,0,0]];
     let Juegos_Pierdo=[[0,0],[0,0,0],[0,0,0,0]];
     //Musipaper! Hay que optimizar el procedimiento para reducir la "dimensionalidad" y en general reducir la parte del poliedro que hace falta visitar (uso de simetrias, tiene muchas)
     //Funfact para medir cuántas hay
     let cuatrimanostotales= 0;
 
-    //Implementa BFS con lista circular como queue
-    let Vertice = vertice_obj.vertice;
-    let arrayqueuesize = 100000;
-    let treewidth = 100;
-    let queuesize = Number(BigInt(arrayqueuesize)*BigInt(treewidth))
-    let arrayqueue = new TreeUint8ArrayOf5x8Array(arrayqueuesize,treewidth); 
-    let sizequeue = new TreeUint8Array(arrayqueuesize,treewidth);
-    let coordqueue = new TreeUint8ArrayOfArray(arrayqueuesize,treewidth,Aristas.length);
-    // queuesize es un upperbound exagerado al tamaño de la seccion || ||_1 = algo... de un poliedro en la piramide ||coordenadas||_1<= 9 a la que pertenece nuestro poliedro, por si acaso. (9 porque puede que se permita -1 en alguna entrada)
-    let head = 0, tail = 1;
-    let coord_init = new Uint8Array(Aristas.length).fill(0);   
-    arrayqueue.modify_array(head,Vertice);
-    coordqueue.modify_array(head,coord_init);
-    sizequeue.modify_value(head,0);
-
-    let norm=0;
-    let Visited = new Set;
-    let dist_head_tail = 1;
-
-    while (dist_head_tail>0){
-        const array = arrayqueue.element(head);
-        const coord = coordqueue.element(head);
-        const suma = sizequeue.element(head);
-
-        head = (head +1) % queuesize;
-        dist_head_tail--;
-        if (suma>norm){
-            norm = suma;
-            Visited.clear();
-        } else if (suma < norm){
-            throw new Error('No recorre de forma ordenada el poliedro');
-        }
-        for (let i = 0; i < Aristas.length; i++) {
-            let new_coord = new Uint8Array(coord);
-            new_coord[i] += 1;
-            if (new_coord.length != Aristas.length){
-                throw new Error('Las coordenadas están cambiando de tamaño');
-            }
-            const key = getKey(new_coord);
-            if (!Visited.has(key)){ 
-                const array_new = Aristas[i].addto(array);
-                if (array_new.every(row=> row.every(v=> v>= 0))){
-                    //array_new es un relleno posible 
-                    actualizar_densidad(array_new,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
-                    cuatrimanostotales++;
-                    arrayqueue.modify_array(tail,array_new);
-                    coordqueue.modify_array(tail,new_coord);
-                    sizequeue.modify_value(tail,suma+1);
-                    tail = (tail +1) % queuesize;
-                    dist_head_tail++;
-                    Visited.add(key);
-                } else if (array_new.every((row,i)=> 
-                        row.every((v,j)=> 
-                            v>= vertice_obj.neg_idx[JSON.stringify([i,j])]
-                        )
-                    )){
-                    arrayqueue.modify_array(tail,array_new);
-                    coordqueue.modify_array(tail,new_coord);
-                    sizequeue.modify_value(tail,suma+1);
-                    tail = (tail +1) % queuesize;
-                    dist_head_tail++;
-                    Visited.add(key);
-                }
-            } 
-        }
-        if (dist_head_tail>queuesize){
-            throw new Error('El perro se mordió la cola, insuficiente longitud de lista circular: ',queuesize)
-        }
-    }
+    //Implementación "parametrización ortogonal" por medio de una recursión
+    cuatrimanostotales = parametrizar(fmax.length,5,0,0,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
     console.log('adiós')
     const result = [Juegos_Gano.map((Juego,Index) => Juego.map((ganadas, index) => 100*ganadas/(ganadas + Juegos_Pierdo[Index][index]))),true,cuatrimanostotales];
     return result;
 }
 
-
+ 
 function caracteres_to_indeces(L,valores = misValores){
     const result = Array(valores.length).fill(0);
     for (const letra of L){
@@ -882,7 +745,7 @@ function probabilidad_conmus(mano_amiga1,mano_amiga2=[],soymano=true,tiro,cartas
         let e1a2 = relorden(mano_enemiga1, mano_amiga2, soymano);
         let a1e2 = relorden(mano_amiga1, mano_enemiga2, soymano);
         
-        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+        if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
             Juegos_Gano[0][0] += frecuencia;
         } else {
             Juegos_Pierdo[0][0] += frecuencia;
@@ -893,7 +756,7 @@ function probabilidad_conmus(mano_amiga1,mano_amiga2=[],soymano=true,tiro,cartas
         e1a2 = relorden(mano_enemiga1, mano_amiga2, soymano, false);
         a1e2 = relorden(mano_amiga1, mano_enemiga2, soymano, false);
         
-        if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+        if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
             Juegos_Gano[0][1] += frecuencia;
         } else {
             Juegos_Pierdo[0][1] += frecuencia;
@@ -907,20 +770,20 @@ function probabilidad_conmus(mano_amiga1,mano_amiga2=[],soymano=true,tiro,cartas
         let mano_enemiga1_pares_bool = repet(mano_enemiga1)
         let mano_enemiga2_pares_bool = repet(mano_enemiga2)
         
-        if (mano_enemiga1_pares_bool && !mano_enemiga2_pares_bool) {
+        if (mano_enemiga1_pares_bool & !mano_enemiga2_pares_bool) {
             if ((a1e1 >= 0) || (e1a2 === -1)) {
                 Juegos_Gano[1][0] += frecuencia;
             } else {
                 Juegos_Pierdo[1][0] += frecuencia;
             }
-        } else if (mano_enemiga2_pares_bool && !mano_enemiga1_pares_bool){
+        } else if (mano_enemiga2_pares_bool & !mano_enemiga1_pares_bool){
             if ((a1e2 >= 0) || (a2e2 >= 0)) {
                 Juegos_Gano[1][1] += frecuencia;
             } else {
                 Juegos_Pierdo[1][1] += frecuencia;
             }
-        } else if (mano_enemiga1_pares_bool && mano_enemiga2_pares_bool) {
-            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+        } else if (mano_enemiga1_pares_bool & mano_enemiga2_pares_bool) {
+            if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
                 Juegos_Gano[1][2] += frecuencia;
             } else {
                 Juegos_Pierdo[1][2] += frecuencia;
@@ -932,26 +795,26 @@ function probabilidad_conmus(mano_amiga1,mano_amiga2=[],soymano=true,tiro,cartas
         e1a2 = relordenJ(mano_enemiga1_juego, mano_amiga2_juego, soymano);
         a1e2 = relordenJ(mano_amiga1_juego, mano_enemiga2_juego, soymano);
         
-        if (mano_enemiga1_juego > 30 && mano_enemiga2_juego < 31) {
+        if (mano_enemiga1_juego > 30 & mano_enemiga2_juego < 31) {
             if ((a1e1 >= 0) || (e1a2 < 0)) {
                 Juegos_Gano[2][0] += frecuencia;
             } else {
                 Juegos_Pierdo[2][0] += frecuencia;
             }
-        } else if (mano_enemiga2_juego > 30 && mano_enemiga1_juego < 31) {
+        } else if (mano_enemiga2_juego > 30 & mano_enemiga1_juego < 31) {
             if ((a1e2 >= 0) || (a2e2 >= 0)) {
                 Juegos_Gano[2][1] += frecuencia;
             } else {
                 Juegos_Pierdo[2][1] += frecuencia;
             }
-        } else if (mano_enemiga1_juego > 30 && mano_enemiga2_juego > 30) {
-            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+        } else if (mano_enemiga1_juego > 30 & mano_enemiga2_juego > 30) {
+            if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
                 Juegos_Gano[2][2] += frecuencia;
             } else {
                 Juegos_Pierdo[2][2] += frecuencia;
             }
-        } else if (mano_enemiga1_juego < 31 && mano_enemiga2_juego < 31) {
-            if ((a1e1 >= 0 && a1e2 >= 0) || (e1a2 === -1 && a2e2 >= 0)) {
+        } else if (mano_enemiga1_juego < 31 & mano_enemiga2_juego < 31) {
+            if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
                 Juegos_Gano[2][3] += frecuencia;
             } else {
                 Juegos_Pierdo[2][3] += frecuencia;
@@ -981,7 +844,7 @@ function posibles_f(s,fmax) {
     const visited = new Set();
     
     // Helper to check if an array has only non-negative numbers
-    const inBounds = (arr) => arr.every((x,index) => (x >= 0 && x <= fmax[index]));
+    const inBounds = (arr) => arr.every((x,index) => (x >= 0 & x <= fmax[index]));
     
     // Start BFS with the initial array
     queue.push({ array: initialArray, coordinates: initialCoordinates });
@@ -1004,7 +867,7 @@ function posibles_f(s,fmax) {
             newCoordinates[i] += 1;
 
             // Check if the new array is valid and not visited
-            if (inBounds(newArray) && !visited.has(arrayToString(newCoordinates))) {
+            if (inBounds(newArray) & !visited.has(arrayToString(newCoordinates))) {
                 queue.push({ array: newArray, coordinates: newCoordinates });
                 visited.add(arrayToString(newCoordinates));
             }
@@ -1017,7 +880,7 @@ function posibles_f(s,fmax) {
             newCoordinates[i-1] += 1;
 
             // Check if the new array is valid and not visited
-            if (inBounds(newArray) && !visited.has(arrayToString(newCoordinates))) {
+            if (inBounds(newArray) & !visited.has(arrayToString(newCoordinates))) {
                 queue.push({ array: newArray, coordinates: newCoordinates });
                 visited.add(arrayToString(newCoordinates));
             }
@@ -1084,7 +947,7 @@ function solVertice_extend_FL(f, l) {
         VerticeMat[i][j] = 0;
 
         EstelaMat[i][j] = 0;
-        if (f[i + 1] !== 0 && l[j - 1] !== 0) {
+        if (f[i + 1] !== 0 & l[j - 1] !== 0) {
             EstelaMat[i + 1][j - 1] = 1;
         }
 
@@ -1098,7 +961,7 @@ function solVertice_extend_FL(f, l) {
             VerticeMat[itemp - 1][j] = 0;
 
             EstelaMat[itemp - 1][j] = 0;
-            if (f[itemp] !== 0 && l[j - 1] !== 0) {
+            if (f[itemp] !== 0 & l[j - 1] !== 0) {
                 EstelaMat[itemp][j - 1] = 1;
             }
         }
@@ -1113,12 +976,12 @@ function solVertice_extend_FL(f, l) {
             VerticeMat[i][jtemp + 1] = 0;
 
             EstelaMat[i][jtemp + 1] = 0;
-            if (f[i + 1] !== 0 && l[jtemp] !== 0) {
+            if (f[i + 1] !== 0 & l[jtemp] !== 0) {
                 EstelaMat[i + 1][jtemp] = 1;
             }
         }
 
-        if (itemp === i + 1 && jtemp === j - 1) {
+        if (itemp === i + 1 & jtemp === j - 1) {
             break;
         }
 
@@ -1129,7 +992,7 @@ function solVertice_extend_FL(f, l) {
     let neg_idx = {};
     for (let i=1; i<f.length; i++){
         for (let j=1; j<l.length; j++){
-            if (EstelaMat[i][j]==1 && VerticeMat[i][j]==0){
+            if (EstelaMat[i][j]==1 & VerticeMat[i][j]==0){
                 neg_idx[JSON.stringify([i,j])]=-1;
             } else{
                 neg_idx[JSON.stringify([i,j])]=-0;
@@ -1140,246 +1003,216 @@ function solVertice_extend_FL(f, l) {
     return {vertice : VerticeMat, estela : EstelaMat, neg_idx : neg_idx};
 }
 
-// Escribimos nuestro algoritmo de caminos para crear las matrices arista a partir de una matriz "completa" - algoritmo del MUSIPAPER. 
+// Algoritmo busca caminos 
 
-// Función que obtiene las primeras aristas, cada vector arista es en realidad una función para acortar a O(n+v) de O(n*v) el proceso de sumar.
-function primeras_aristas_funcion_adicion_nocopy(V){
+// Función que obtiene las aristas de un VÉRTICE de una frontera especificada en IGNORE, cada vector arista es en realidad una función para acortar a O(n+v) de O(n*v) el proceso de sumar.
+function primeras_aristas_funcion_adicion_nocopy(V,ignore_type='',ignore=[],options='',optionsargument=[]){
+    function ignoring(i,j){
+        if (ignore_type == 'LG'){
+            //menor estricto lexicográfico
+            return i<=ignore[0] ? i<ignore[0] ? true : j<ignore[1] : false
+        }
+    }
     const result = []
     const v = V.length
     const n = V[0].length
-    for (let i = 0; i < v; i++) {
-        for (let j = 0; j < n; j++) {
-            if (V[i][j]===0){
-                const Arista = find_balanced_paths(V, [i,j]);
-                if (Arista[1]){
-                    const arista = Arista[0];
-                    arista.addto = matrix_to_adition_nocopy(Arista[0])
-                    result.push(arista);
-                }
-            }
-        }
+    const Aristas = find_all_balanced_paths_bis(V,ignoring,options,optionsargument);
+    for (const arista of Aristas){
+        result.push(new matrix_to_adition(arista));
     }
+    
     return result
 }
 
-//SOLO CORRECTO PARA VERTICES ESTELA
-function find_balanced_paths(V, I) {
-    // Verifica que la entrada es válida
-    if (V[I[0]][I[1]] !== 0) {
-        throw new Error('La posición inicial (i, j) debe contener un 0.');
-    }
+//TODAS las Aristas de un vértice general "positivas" tangentes a una frontera, algoritmo de musinator (la única parte realmente importante de todo el código)
+function find_all_balanced_paths_bis(V, ignoring=(i,j)=>{return false}, options='',optionsargument=[]) {
+    let v = V.length;
+    let n = V[0].length;
+    let A = []; //A de aristas, es el result
 
-    const v = V.length;
-    const n = V[0].length;
-    let paths = []; // Lista de caminos activos: [{ camino, última coordenada, paridad }]
-    let result = Array.from({ length: v }, () => Array(n).fill(0)); // Matriz de resultado final
-
-    // Inicializa el primer camino con el punto inicial
-    let initialPath = Array.from({ length: v }, () => Array(n).fill(0));
-    initialPath[I[0]][I[1]] = 1; // Marca la posición inicial con un 1
-    paths.push({ path: initialPath, coords: I, parity: 1 }); // Incluye camino, coordenadas y paridad
-
-    while (paths.length > 0) {
-        let newPaths = []; // Nuevos caminos generados en esta iteración
-
-        // Procesa cada camino activo
-        for (let p = 0; p < paths.length; p++) {
-            const currentPathData = paths[p];
-            const currentPath = currentPathData.path;
-            const lastCoords = currentPathData.coords;
-            const currentParity = currentPathData.parity;
-
-            const i = lastCoords[0];
-            const j = lastCoords[1];
-
-            // Expandir por fila
-            if (currentParity % 2 === 1) { // Paso impar
-                for (let col = 0; col < n; col++) {
-                    if (i === I[0] && col === I[1] && ((-2 * (currentParity % 2) + 1) === 1)) {
-                        result = currentPath;
-                        return [result, true];
-                    } else if (V[i][col] !== 0 && currentPath[i][col] === 0) {
-                        // Crear un nuevo camino
-                        let newPath = currentPath.map(row => row.slice());
-                        newPath[i][col] = -2 * (currentParity % 2) + 1; // Alterna paridad
-
-                        // Agregar a la lista de nuevos caminos
-                        newPaths.push({ path: newPath, coords: [i, col], parity: currentParity + 1 });
-                    }
+    //Encontramos las clases de zig-zag equivalencia (entradas no nulas conectadas por algún zig-zag)
+    let Visited = new Set;
+    let ZZequivalenceclasses_rows = {};
+    let ZZequivalenceclasses_cols = {};
+    let currentclass = 0;
+    for (let i=0;i<v;i++){
+        for (let j=0;j<n;j++){
+            if (V[i][j]==0 || Visited.has(i+v*j) || ignoring(i,j)) continue;
+            currentclass++;
+            Visited.add(i+v*j)
+            ZZequivalenceclasses_rows[i]=currentclass;
+            ZZequivalenceclasses_cols[j]=currentclass;
+            let queue = [];
+            queue.push([i,j,0])
+            while (queue.length>0){
+                const [inew,jnew,parity] = queue.shift();
+                for (let ii=0;ii<v;ii++){
+                    if (parity==1) break;
+                    if (V[ii][jnew]==0 || Visited.has(ii+v*jnew) || ignoring(ii,jnew)) continue;
+                    Visited.add(ii+v*j)
+                    ZZequivalenceclasses_rows[ii]=currentclass;
+                    ZZequivalenceclasses_cols[jnew]=currentclass;
+                    queue.push([ii,jnew,1])
                 }
-            }
-
-            // Expandir por columna
-            if (currentParity % 2 === 0) { // Paso par
-                for (let row = 0; row < v; row++) {
-                    if (row === I[0] && j === I[1] && ((-2 * (currentParity % 2) + 1) === 1)) {
-                        result = currentPath;
-                        return [result, true];
-                    } else if (V[row][j] !== 0 && currentPath[row][j] === 0) {
-                        // Crear un nuevo camino
-                        let newPath = currentPath.map(row => row.slice());
-                        newPath[row][j] = -2 * (currentParity % 2) + 1; // Alterna paridad
-
-                        // Agregar a la lista de nuevos caminos
-                        newPaths.push({ path: newPath, coords: [row, j], parity: currentParity + 1 });
-                    }
+                for (let jj=0;jj<n;jj++){
+                    if (parity==2) break;
+                    if (V[inew][jj]==0 || Visited.has(inew+v*jj) || ignoring(inew,jj)) continue;
+                    Visited.add(inew+v*jj)
+                    ZZequivalenceclasses_rows[inew]=currentclass;
+                    ZZequivalenceclasses_cols[jj]=currentclass;
+                    queue.push([inew,jj,2])
                 }
             }
         }
-
-        // Actualiza caminos
-        paths = newPaths;
     }
 
-    return [result, false];
+    // No crear caminos con elementos cuyas aristas asociadas ya hemos encontrado
+    // evitar duplicidades en el output, estos serán los menores en el LG.
+    let visited = new Set();
+    for (i1=0;i1<v;i1++){
+        for (j1=0;j1<n;j1++){
+            // Verifica que la entrada es válida
+            const objective = ZZequivalenceclasses_cols[j1] ? ZZequivalenceclasses_cols[j1] : undefined;
+            if (options=='one'){
+                [i1,j1]=optionsargument;
+                if (!objective) return [];
+            } else if (ignoring(i1,j1) || V[i1][j1]!= 0 || !objective) continue; 
+            visited.add(i1+v*j1);
+            let paths = []; // Lista de caminos activos: {[camino, última coordenada], ...}
+        
+            // Inicializa el primer camino con el punto inicial
+            let initial_path = Array.from({ length: v }, () => new Array(n).fill(0));
+            initial_path[i1][j1] = 1; // Marca la posición inicial con un 1
+            let zzequiv = new Set();
+            if (ZZequivalenceclasses_rows[i1]){
+                zzequiv.add(ZZequivalenceclasses_rows[i1])
+            }
+            const I=[i1,j1];
+            paths.push([initial_path, I, 1, zzequiv]); 
+            //Incluye camino, coordenadas, paridad y clases de equivalencia con las que conecta
+            //Si llegamos a la clase de equivalencia de la columna hemos terminado, si no la hay es que no hay aristas posibles.
+            
+            while (paths.length>0){
+                let new_paths = []; // Nuevos caminos generados en esta iteración
+                // Procesa cada camino activo
+                for (let p=0;p<paths.length;p++){
+                    const current_path_data = paths[p];
+                    const current_path = current_path_data[0];
+                    const last_coords = current_path_data[1]; // Coordenadas del último cambio
+                    const current_parity = current_path_data[2];
+                    const current_zzequiv = current_path_data[3];
+            
+                    const i = last_coords[0];
+                    const j = last_coords[1];
+            
+                    // Expandir por fila
+                    if (current_parity == 1){ //Paso impar, añadir -1
+                        for (let col=0;col<n;col++){
+                            if (visited.has(i+v*col) || ignoring(i,col)) continue;
+                            if (current_path[i][col] == 0){
+                                if (V[i][col] != 0){
+                                    // Crear un nuevo camino
+                                    let new_path = current_path.map(row=>[...row]);
+                                    new_path[i][col] = -1; // Alterna paridad
+                
+                                    // Agregar a la lista de nuevos caminos
+                                    new_paths.push([new_path, [i, col], 0, current_zzequiv]);
+                                } 
+                            }
+                        }
+                    }
+            
+                    // Expandir por columna
+                    if (current_parity == 0){ // Paso par, añadir 1
+                        if (j==I[1]){
+                            //Congratulaciones volviste a la posición original, has ganado, tienes una arista
+                            if (options=='anynonzero'){
+                                if (current_path[optionsargument[0]][optionsargument[1]]!=0){
+                                    return [current_path];
+                                }
+                            } else {
+                                A.push(current_path);
+                                if (options=='one'){
+                                    return A;
+                                }
+                            }
+                            continue;
+                        }
+                        for (let row = 1; row<v;row++){
+                            if (visited.has(row+v*j) || ignoring(row,j)) continue;
+                            if (current_path[row][j] == 0){
+                                if (V[row][j] !== 0){
+                                    // Crear un nuevo camino
+                                    let new_path = current_path.map(row=>[...row]);
+                                    new_path[row][j] = 1; // Alterna paridad
+                
+                                    // Agregar a la lista de nuevos caminos
+                                    new_paths.push([new_path, [row, j], 1,current_zzequiv]);
+                                } else if (ZZequivalenceclasses_rows[row] & !current_zzequiv.has(objective)){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
+                                    if (current_zzequiv.has(ZZequivalenceclasses_rows[row])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
+                                    // no nulos del vértice de la frontera en dicha fila y por tanto en el siguiente paso no podría añadir un -1 luego ese posible camino se puede ignorar.
+                                    // Crear un nuevo camino
+                                    let new_path = current_path.map(row=>[...row]);
+                                    new_path[row][j] = 1; // Alterna paridad
+                                    let new_zzequiv = new Set(current_zzequiv);
+                                    new_zzequiv.add(ZZequivalenceclasses_rows[row]);
+                                    // Agregar a la lista de nuevos caminos
+                                    new_paths.push([new_path, [row, j], 1,new_zzequiv]);
+                                } 
+                            }
+                        }
+                    }
+                }
+            
+                // Actualiza caminos
+                paths = new_paths;
+            }
+            if (options=='one'){
+                return A;
+            }
+        }
+    }
+    return A;
 }
 
-function matrix_to_adition(M) {
-    // Extraer las posiciones y valores de los elementos no nulos de M
-    const nonZeroElements = [];
-    for (let i = 0; i < M.length; i++) {
-        for (let j = 0; j < M[i].length; j++) {
-            if (M[i][j] !== 0) {
-                nonZeroElements.push([i, j, M[i][j]]);
+class matrix_to_adition {
+    constructor(M) {
+        // Extraer las posiciones y valores de los elementos no nulos de M
+        this.arista = M;
+        this.nonZeroElements = [];
+        for (let i = 0; i < M.length; i++) {
+            for (let j = 0; j < M[i].length; j++) {
+                if (M[i][j] !== 0) {
+                    this.nonZeroElements.push([i, j, M[i][j]]);
+                }
             }
         }
     }
 
-    // Devolver una función que suma M con otra matriz N
-    return function (N,t=1) {
-        // Crear una copia de N para no modificarla directamente
-        const result = N.map(row => row.slice());
-        
-        // Sumar los elementos no nulos de M a la matriz N
-        // Si en algún momento va a crear un elemento negativo, no lo hagas ^-^
-        for (const element of nonZeroElements) {
-            result[element[0]][element[1]] += t*element[2];
-            if (result[element[0]][element[1]]<0){
-                return [result, false]
-            }
-        }
-        
-        return [result, true];
-    };
-}
-
-function matrix_to_adition_nocopy(M) {
-    // Extraer las posiciones y valores de los elementos no nulos de M
-    const nonZeroElements = [];
-    for (let i = 0; i < M.length; i++) {
-        for (let j = 0; j < M[i].length; j++) {
-            if (M[i][j] !== 0) {
-                nonZeroElements.push([i, j, M[i][j]]);
-            }
-        }
-    }
-
-    // Devolver en [0] una función que dice si la suma de M con otra matriz N es válida (nonegativa excepto en los indices de neg_idx donde es mayor que -1)
-    // y en [1] una función que suma M con otra matriz N primero realizando un deepcopy de N
-    return function (N,t=1) {
+    // Devolver en add una función que dice si la suma de M con otra matriz N es válida (nonegativa excepto en los indices de neg_idx donde es mayor que -1)
+    // y en maxadd una función que suma M con otra matriz N primero realizando un deepcopy de N
+    addto = function (N,t=1) {
         // Sumar los elementos no nulos de M a la matriz N
         let NN = N.map(row => row.slice());
-        for (const element of nonZeroElements) {
+        for (const element of this.nonZeroElements) {
             NN[element[0]][element[1]] += t*element[2];
         }
         return NN;
-    }
-}
-
-// Y devolver el conjunto de las matrices dados f y l
-function matrices(f,l){
-    if (2>f.length || 2>l.length){
-        throw new Error('Checkeate las dimensiones heig, v,n>1');
-    }
-    if (f.reduce((acc,v) => acc += v,0) !== l.reduce((acc,v) => acc+=v,0)){
-        console.log(f,l)
-        throw new Error('l y f no suman lo mismo (you re cooked)')
-    }
-    //Creamos el vértice
-    const initialArray = solVerticeFL(f,l);
-    //Creamos sus aristas (funcion adicion) (se fía que initialArray es un vértice y por tanto su estela es buena)
-    const aristas = primeras_aristas_funcion_adicion_nocopy(initialArray[1]);
-    const n_aristas = aristas.length;
-    const initialCoordinates = Array(n_aristas).fill(0)
-
-    const queue = [];
-    const visited = new Set();
-
-    // Helper to hash arrays as strings for visited set
-    const arrayToString = (arr) => JSON.stringify(arr);
-    
-    // Start BFS with the initial array
-    queue.push({ arrayidx: 0, coordinates: initialCoordinates });
-    visited.add(arrayToString(initialCoordinates));
-    initialArray[0].f = f;
-    initialArray[0].l = l;
-    const result = [initialArray[0]];
-
-    while (queue.length > 0) {
-        const { arrayidx, coordinates } = queue.shift();
-
-        // Try adding each step
-        for (let i = 0; i < n_aristas; i++) {
-            if (! aristas[i][0](result[arrayidx])) continue;
-            // Add the new array to the result
-            const newCoordinates = [...coordinates];
-            newCoordinates[i] += 1;
-        
-            // Check if the new array is not visited
-            if (!visited.has(arrayToString(newCoordinates))) {
-                result.push( JSON.parse(JSON.stringify(result[arrayidx])) );
-                result[result.length-1] = aristas[i][1](result[result.length-1]);
-                queue.push({ arrayidx: result.length-1, coordinates: newCoordinates });
-                visited.add(arrayToString(newCoordinates));
-            }
+    };
+    maxadd = function (N) {
+        let max = Infinity;
+        for (const element of this.nonZeroElements) {
+            if (element[2]>0) continue;
+            max = Math.min(max,Math.floor(-N[element[0]][element[1]]/element[2]));
         }
-    }
-    result.coords = visited;
-    result.aristas = aristas;
-    result.initialvert = initialArray
-    return result;
-}
-
-//FINALMENTE, THE MOMENT YOU'VE BEEN WAITING FOR: la implementación completa del código que para un fmax, lmax y s dados devuelve el conjunto de matrices que cumplen
-
-function matrices_sumaFL(fmax,lmax,s){
-    //Edging Cases
-    if (fmax.length===1){
-        return posibles_f(s,lmax).map(vect => [vect]);
-    } else if (lmax.length===1){
-        //Traspondremos para ser felices
-        return posibles_f(s,fmax).map(vect => vect.map(val => [val]));
-    } else if (fmax.length===0 || lmax.length===0){
-        //Lol
-        return []
-    }
-    let result = [];
-    const f_posible = posibles_f(s,fmax);
-    const l_posible = posibles_f(s,lmax);
-    for (let i = 0; i<f_posible.length; i++){
-        for (let j = 0; j<l_posible.length; j++){
-            result = result.concat(matrices(f_posible[i],l_posible[j]));
+        return max;
+    };
+    maxsub = function (N) {
+        let max = -Infinity;
+        for (const element of this.nonZeroElements) {
+            if (element[2]<0) continue;
+            max = Math.max(max,Math.floor(-N[element[0]][element[1]]/element[2]));
         }
-    }
-    return result;
-}
-
-function matrices_Lfijo(fmax,lmax){
-    const s = lmax.reduce((acc,v) => acc += v,0)
-    //Edging Cases
-    if (fmax.length===1){
-        return [lmax];
-    } else if (lmax.length===1){
-        //Traspondremos para ser felices
-        return fmax.map(val => [val]);
-    } else if (fmax.length===0 || lmax.length===0){
-        //Lol
-        return []
-    }
-    let result = [];
-    const f_posible = posibles_f(s,fmax);
-    for (let i = 0; i<f_posible.length; i++){
-        result = result.concat(matrices(f_posible[i],lmax));
-    }
-    return result;
+        return max;
+    };
 }
