@@ -4,20 +4,19 @@ body, html {
     width: 100%;
     height: 100%;
     background-image: url(/Img/fondorojo.avif);
+    background-repeat: no-repeat;
+    background-size:cover;
     font-size: 1vw; 
 }
 
 h1 {
-    position: fixed;
-    top: 12vh;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    height: 15vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: inherit;
     color: rgb(0, 0, 0); 
     font-size: 4vw; 
-    text-align: center; 
     margin: 0 auto; 
-    z-index: 10;
 }
 
 #graph-container {
@@ -37,34 +36,31 @@ h1 {
     width: 100%;
     height: 100%;
     pointer-events: none; 
-    z-index: 1; 
-    overflow: visible;
+    z-index: 0; 
+    overflow: hidden;
 }
 
 
 #arboles {
-    position: relative;
     top: 10vh;
     height: 10vh; 
     background-image: url(/Img/Navideño3.gif); 
     background-repeat: round; /* Repetir la imagen horizontalmente */
     background-size: auto 100%; 
-    margin: 0 auto; 
     z-index: 10;
 }
 
 .container {
     height: 10vh;
-    margin-top: 10vh;
+    margin-top: 0vh;
     z-index: 10;
 }
 
 .cajas-paralelas{
-    position: fixed;
-    left: 35%;
+    position: center;
     display: flex;
+    justify-content: center;
     margin-top: 2vh;
-    margin-left: 3vw;
     z-index: 10;
 }
 
@@ -73,8 +69,8 @@ h1 {
     width: 15vw;
 }
 
-.user-input {  
-    position: relative; 
+.user-input {   
+    justify-content: center;
     width: 20vw; 
     margin: 20vh auto; 
     padding: 1vh; 
@@ -89,7 +85,7 @@ h1 {
 .input-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 2vh; 
+    margin: auto; 
     z-index: 10;
     font-size: 100%;
 }
@@ -135,7 +131,7 @@ h1 {
     height: auto;
     opacity: 0.8; 
     animation: fall linear infinite;
-    z-index: 0
+    z-index: 0;
 }
 
 /* Animación de caída */

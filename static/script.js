@@ -39,6 +39,8 @@ function createCard() {
     const size = 4;
     card.style.width = `${size}vh`;
 
+    card.style.zIndex = 0;
+
     // Altura aleatoria inicial para que las cartas no comiencen todas en la misma posición
     card.style.top = `${0}vh`;
 
@@ -194,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (0==1) { //Desactivado el segundo botón porque no hay mus nunca
             inputCounter++; 
             const newInputHTML = `
+                <div class="separador"></div>
                 <div class="user-input" id="input-${inputCounter}">
                     <h2>Feeling Lucky</h2>
                     <div class="input-container">

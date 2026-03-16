@@ -504,6 +504,37 @@ function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_inde
             } 
         })
         const Inew = LGconsec(v,n,i,j);
+        //DEBUG
+        if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
+            const max_add = arista_max.maxadd(Vertice);
+            for (let l=1;l<max_add;l++){
+                const new_vertice = arista_max.addto(Vertice,l);
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+            if (max_add>0){
+                const new_vertice = arista_max.addto(Vertice,max_add);
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+        }
+        if (arista_min!=undefined & (ascend=='split'||ascend=='descend')){
+            const max_sub = arista_min.maxadd(Vertice);
+            for (let l=1;l<max_sub;l++){
+                const new_vertice = arista_min.addto(Vertice,l);
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+            if (max_sub>0){
+                const new_vertice = arista_min.addto(Vertice,max_sub);
+                if (i==0 & j==2){
+                    let dummy=1;
+                }
+            }
+        }
         cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',Aristas_new);    
         if ((!arista_max) & (!arista_min)) return cuatrimanostotales;
         if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
