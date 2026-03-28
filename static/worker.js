@@ -467,108 +467,55 @@ function LGconsec(v,n,i,j){
         return [i,j+1];
     }
 }
-function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,ascend='split',Aristas=undefined) {
+function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,ascend='split',Aristas=undefined, seen=false) {
     //Vertice es un vértice de la frontera "virtual" F_{<_LG(i,j)} (MENOR ESTRICTO)
     //Actualizamos densidades en los casos base
-    if (i==v-1 & j==n-1){ //No debería entrar nunca aquí
+    if (!seen){ 
         actualizar_densidad(Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
-        console.warn('La condición base usual ha fallado',Vertice);
-        return cuatrimanostotales + 1;
+        cuatrimanostotales++;
     }
-    if (Aristas==undefined){
-        Aristas = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j]);
-        let dummy = 1;
-    }
-    if (Aristas.length==0){
-        actualizar_densidad(Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
-        return cuatrimanostotales + 1;
-    } else{ //Aplicamos algoritmo del simplex, si Vertice(i,j) es maximal entonces negativa si es minimal positiva. Aristas.one es una arista con (i,j)=1
+    Aristas = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j]);
+    if (Aristas.length!=0){
+    //Aplicamos algoritmo del simplex, si Vertice(i,j) es maximal entonces negativa si es minimal positiva. Aristas.one es una arista con (i,j)=1
     //Mandamos un camino ascendente y uno descendente
         let arista_max = undefined;
         let arista_min = undefined;
-        let Aristas_new = [];
-        Aristas.forEach(arista=>{
+        let Aristas_new = Aristas.filter(arista=>{
             let jj=0;
-            for (let ii=0;ii<i || (ii==i & jj<j); (jj==n-1) ? [ii,jj]=[ii+1,0] : [ii,jj]=[ii,jj+1]){
+            for (let ii=0;(ii<i) || (ii==i & jj<j); (jj==n-1) ? [ii,jj]=[ii+1,0] : [ii,jj]=[ii,jj+1]){
                 if (arista.arista[ii][jj]!=0){
-                    return;
+                    return false;
                 }
             }
-            Aristas_new.push(arista);
             if (arista.arista[i][j]==1){
                 arista_max=arista;
-                return;
             } else if (arista.arista[i][j]==-1){
                 arista_min=arista;
-                return;
             } 
+            return true;
         })
         const Inew = LGconsec(v,n,i,j);
-        //DEBUG
+        cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',Aristas_new,true);    
         if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
             const max_add = arista_max.maxadd(Vertice);
             for (let l=1;l<max_add;l++){
                 const new_vertice = arista_max.addto(Vertice,l);
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
-            }
-            if (max_add>0){
-                const new_vertice = arista_max.addto(Vertice,max_add);
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
-            }
-        }
-        if (arista_min!=undefined & (ascend=='split'||ascend=='descend')){
-            const max_sub = arista_min.maxadd(Vertice);
-            for (let l=1;l<max_sub;l++){
-                const new_vertice = arista_min.addto(Vertice,l);
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
-            }
-            if (max_sub>0){
-                const new_vertice = arista_min.addto(Vertice,max_sub);
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
-            }
-        }
-        cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',Aristas_new);    
-        if ((!arista_max) & (!arista_min)) return cuatrimanostotales;
-        if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
-            const max_add = arista_max.maxadd(Vertice);
-            for (let l=1;l<max_add;l++){
-                const new_vertice = arista_max.addto(Vertice,l);
-                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'ascend');
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
+                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split');
             }
             if (max_add>0){
                 const new_vertice = arista_max.addto(Vertice,max_add);
                 cuatrimanostotales = parametrizar(v,n,i,j,new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'ascend');
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
             }
         }
         if (arista_min!=undefined & (ascend=='split'||ascend=='descend')){
             const max_sub = arista_min.maxadd(Vertice);
             for (let l=1;l<max_sub;l++){
                 const new_vertice = arista_min.addto(Vertice,l);
-                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'descend');
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
+                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split');
             }
             if (max_sub>0){
                 const new_vertice = arista_min.addto(Vertice,max_sub);
                 cuatrimanostotales = parametrizar(v,n,i,j,new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'descend');
-                if (i==0 & j==2){
-                    let dummy=1;
-                }
             }
         }
     }
@@ -601,6 +548,7 @@ function probabilidad_mus_musipaper(mano_amiga1,mano_amiga2=[],soymano=true,valo
 
     //Implementación "parametrización ortogonal" por medio de una recursión
     cuatrimanostotales = parametrizar(fmax.length,5,0,0,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
+
     console.log('adiós')
     const result = [Juegos_Gano.map((Juego,Index) => Juego.map((ganadas, index) => 100*ganadas/(ganadas + Juegos_Pierdo[Index][index]))),true,cuatrimanostotales];
     return result;
@@ -1169,7 +1117,7 @@ function find_all_balanced_paths_bis(V, ignoring=(i,j)=>{return false}, options=
                             }
                             continue;
                         }
-                        for (let row = 1; row<v;row++){
+                        for (let row = 0; row<v;row++){
                             if (visited.has(row+v*j) || ignoring(row,j)) continue;
                             if (current_path[row][j] == 0){
                                 if (V[row][j] !== 0){
@@ -1179,7 +1127,7 @@ function find_all_balanced_paths_bis(V, ignoring=(i,j)=>{return false}, options=
                 
                                     // Agregar a la lista de nuevos caminos
                                     new_paths.push([new_path, [row, j], 1,current_zzequiv]);
-                                } else if (ZZequivalenceclasses_rows[row] & !current_zzequiv.has(objective)){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
+                                } else if (ZZequivalenceclasses_rows[row]!=undefined & !current_zzequiv.has(objective)){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
                                     if (current_zzequiv.has(ZZequivalenceclasses_rows[row])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
                                     // no nulos del vértice de la frontera en dicha fila y por tanto en el siguiente paso no podría añadir un -1 luego ese posible camino se puede ignorar.
                                     // Crear un nuevo camino
