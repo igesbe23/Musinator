@@ -355,3 +355,154 @@ function matrices_sumaFL(fmax,lmax,s){
         }
     }
 }
+
+//TODAS las Aristas de un vértice general "positivas" tangentes a una frontera, algoritmo de musinator (la única parte realmente importante de todo el código)
+function find_all_balanced_paths_bis(V, ignoring=(i,j)=>{return false}, options='',optionsargument=[]) {
+    let v = V.length;
+    let n = V[0].length;
+    let A = []; //A de aristas, es el result
+
+    //Encontramos las clases de zig-zag equivalencia (entradas no nulas conectadas por algún zig-zag)
+    let Visited = new Set;
+    let ZZequivalenceclasses_rows = {};
+    let ZZequivalenceclasses_cols = {};
+    let currentclass = 0;
+    for (let i=0;i<v;i++){
+        for (let j=0;j<n;j++){
+            if (V[i][j]==0 || Visited.has(i+v*j) || ignoring(i,j)) continue;
+            currentclass++;
+            Visited.add(i+v*j)
+            ZZequivalenceclasses_rows[i]=currentclass;
+            ZZequivalenceclasses_cols[j]=currentclass;
+            let queue = [];
+            queue.push([i,j,0])
+            while (queue.length>0){
+                const [inew,jnew,parity] = queue.shift();
+                for (let ii=0;ii<v;ii++){
+                    if (parity==1) break;
+                    if (V[ii][jnew]==0 || Visited.has(ii+v*jnew) || ignoring(ii,jnew)) continue;
+                    Visited.add(ii+v*jnew)
+                    ZZequivalenceclasses_rows[ii]=currentclass;
+                    ZZequivalenceclasses_cols[jnew]=currentclass;
+                    queue.push([ii,jnew,1])
+                }
+                for (let jj=0;jj<n;jj++){
+                    if (parity==2) break;
+                    if (V[inew][jj]==0 || Visited.has(inew+v*jj) || ignoring(inew,jj)) continue;
+                    Visited.add(inew+v*jj)
+                    ZZequivalenceclasses_rows[inew]=currentclass;
+                    ZZequivalenceclasses_cols[jj]=currentclass;
+                    queue.push([inew,jj,2])
+                }
+            }
+        }
+    }
+
+    // No crear caminos con elementos cuyas aristas asociadas ya hemos encontrado
+    // evitar duplicidades en el output, estos serán los menores en el LG.
+    let visited = new Set();
+    for (i1=0;i1<v;i1++){
+        for (j1=0;j1<n;j1++){
+            // Verifica que la entrada es válida
+            const objective = ZZequivalenceclasses_cols[j1] ? ZZequivalenceclasses_cols[j1] : undefined;
+            if (options=='one'){
+                [i1,j1]=optionsargument;
+                if (!objective) return [];
+            } else if (ignoring(i1,j1) || V[i1][j1]!= 0 || !objective) continue; 
+            visited.add(i1+v*j1);
+            let paths = []; // Lista de caminos activos: {[camino, última coordenada], ...}
+        
+            // Inicializa el primer camino con el punto inicial
+            let initial_path = Array.from({ length: v }, () => new Array(n).fill(0));
+            initial_path[i1][j1] = 1; // Marca la posición inicial con un 1
+            let zzequiv = new Set();
+            if (ZZequivalenceclasses_rows[i1]){
+                zzequiv.add(ZZequivalenceclasses_rows[i1])
+            }
+            const I=[i1,j1];
+            paths.push([initial_path, I, 1, zzequiv]); 
+            //Incluye camino, coordenadas, paridad y clases de equivalencia con las que conecta
+            //Si llegamos a la clase de equivalencia de la columna hemos terminado, si no la hay es que no hay aristas posibles.
+            
+            while (paths.length>0){
+                let new_paths = []; // Nuevos caminos generados en esta iteración
+                // Procesa cada camino activo
+                for (let p=0;p<paths.length;p++){
+                    const current_path_data = paths[p];
+                    const current_path = current_path_data[0];
+                    const last_coords = current_path_data[1]; // Coordenadas del último cambio
+                    const current_parity = current_path_data[2];
+                    const current_zzequiv = current_path_data[3];
+            
+                    const i = last_coords[0];
+                    const j = last_coords[1];
+            
+                    // Expandir por fila
+                    if (current_parity == 1){ //Paso impar, añadir -1
+                        for (let col=0;col<n;col++){
+                            if (visited.has(i+v*col) || ignoring(i,col)) continue;
+                            if (current_path[i][col] == 0){
+                                if (V[i][col] != 0){
+                                    // Crear un nuevo camino
+                                    let new_path = current_path.map(row=>[...row]);
+                                    new_path[i][col] = -1; // Alterna paridad
+                
+                                    // Agregar a la lista de nuevos caminos
+                                    new_paths.push([new_path, [i, col], 0, current_zzequiv]);
+                                } 
+                            }
+                        }
+                    }
+            
+                    // Expandir por columna
+                    if (current_parity == 0){ // Paso par, añadir 1
+                        if (j==I[1]){
+                            //Congratulaciones volviste a la posición original, has ganado, tienes una arista
+                            if (options=='anynonzero'){
+                                if (current_path[optionsargument[0]][optionsargument[1]]!=0){
+                                    return [current_path];
+                                }
+                            } else {
+                                A.push(current_path);
+                                if (options=='one'){
+                                    return A;
+                                }
+                            }
+                            continue;
+                        }
+                        for (let row = 0; row<v;row++){
+                            if (visited.has(row+v*j) || ignoring(row,j)) continue;
+                            if (current_path[row][j] == 0){
+                                if (V[row][j] !== 0){
+                                    // Crear un nuevo camino
+                                    let new_path = current_path.map(row=>[...row]);
+                                    new_path[row][j] = 1; // Alterna paridad
+                
+                                    // Agregar a la lista de nuevos caminos
+                                    new_paths.push([new_path, [row, j], 1,current_zzequiv]);
+                                } else if (ZZequivalenceclasses_rows[row]!=undefined & !current_zzequiv.has(objective)){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
+                                    if (current_zzequiv.has(ZZequivalenceclasses_rows[row])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
+                                    // no nulos del vértice de la frontera en dicha fila y por tanto en el siguiente paso no podría añadir un -1 luego ese posible camino se puede ignorar.
+                                    // Crear un nuevo camino
+                                    let new_path = current_path.map(row=>[...row]);
+                                    new_path[row][j] = 1; // Alterna paridad
+                                    let new_zzequiv = new Set(current_zzequiv);
+                                    new_zzequiv.add(ZZequivalenceclasses_rows[row]);
+                                    // Agregar a la lista de nuevos caminos
+                                    new_paths.push([new_path, [row, j], 1,new_zzequiv]);
+                                } 
+                            }
+                        }
+                    }
+                }
+            
+                // Actualiza caminos
+                paths = new_paths;
+            }
+            if (options=='one'){
+                return A;
+            }
+        }
+    }
+    return A;
+}

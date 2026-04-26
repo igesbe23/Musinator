@@ -2,43 +2,6 @@
 
 //SECCIÓN OPERACIONES RECURRENTES
 
-//rango de una matriz
-
-function rank(matrix) {
-    
-    // Get the number of rows and columns in the matrix
-    const num_rows = matrix.length;
-    const num_cols = matrix.length > 0 ? matrix[0].length : 0;
-    let rank = 0;
-
-    for (let i = 0; i < num_rows; i++) {
-        let pivot_found = false;
-
-        // Iterate over each column of the matrix
-        for (let j = 0; j < num_cols; j++) {
-            if (matrix[i][j] !== 0) {
-                pivot_found = true;
-                rank++; // Increment rank
-                for (let k = 0; k < num_rows; k++) {
-                    if (k !== i) {
-                        const ratio = 
-                            matrix[k][j] / matrix[i][j];
-                        for (let l = 0; l < num_cols; l++) {
-                            matrix[k][l] -= ratio * matrix[i][l];
-                        }
-                    }
-                }
-                break;
-            }
-        }
-        if (!pivot_found) {
-            break;
-        }
-    }
-
-    return rank;
-}
-
 // Helper to hash arrays as strings 
 const arrayToString = (arr) => arr.join(',');
 
@@ -55,85 +18,34 @@ function insertarOrdenado(arr, num, l = 1) {
 }
 
 //Multicombinatorio
+//n! con n=0,...,8
+const factorial = [1,1,2,6,24,120,720,5040,40320];
 const cacheResultados = new Map(); // Mapa para almacenar los resultados
 
-function multicombinatorio_memorizado(a, b, c, d) {
-    // Normalizamos los números (los ordenamos) y creamos una clave única NO SUPERAN 8 LOS VALORES
-    let arr = [a,b,c,d].sort();
-    const clave = arr[0]+9*arr[1]+81*arr[2]+729*arr[3] >>> 0 // Hash IMPORTANTE, es 9 porque una coordenada es imposible que exceda 8 al ser numero de cartas.
+//function multicombinatorio_memorizado5(a, b, c, d, e, f) {
+    // Normalizamos los números (los ordenamos) y creamos una clave única (a = b+c+d+e+f luego f es l.d.)
+//    let arr = [a,b,c,d,e].sort();
+//    const clave = (arr[0] << 16) | (arr[1] << 12) | (arr[2] << 8) | (arr[3] << 4) | arr[4];
 
     // Si el resultado ya está en el cache, lo devolvemos directamente
-    if (cacheResultados.has(clave)) {
-        return cacheResultados.get(clave);
-    }
+//    if (cacheResultados.has(clave)) {
+//        return cacheResultados.get(clave);
+//    }
 
     // Calculamos el resultado y lo almacenamos en el cache
-    const resultado = multicombinatorio(a, b, c, d);
-    cacheResultados.set(clave, resultado);
+//    const resultado = multicombinatorio5(a, b, c, d, e, f);
+//    cacheResultados.set(clave, resultado);
 
-    return resultado;
-}
+//    return resultado;
+//}
 
-//Formas dividir conjunto de elementos distinguibles tamaño a en 4 cajas distinguibles de tamaños b,c,d,a-s en las que no importa el orden
-function multicombinatorio(a, b, c, d) {
-    const s = b + c + d;
-    if (s > a) {
-        return 0;
-    } else if (s===0){
-        return 1;
-    }
-
-    function factorial(n, min = 1) {
-        let result = 1;
-        for (let i = n; i >= min; i--) {
-            result *= i;
-        }
-        return result;
-    }
-
-    let numerador = factorial(a, a - s + 1); // (a! / (a-s)!)
-    let denominador = factorial(b) * factorial(c) * factorial(d); // b! * c! * d!
-    
-    return numerador / denominador;
-}
-
-function multicombinatorio_memorizado5(a, b, c, d, e, f) {
-    // Normalizamos los números (los ordenamos) y creamos una clave única
-    let arr = [a,b,c,d,e,f].sort();
-    const clave = arr[0]+9*arr[1]+9^2*arr[2]+9^3*arr[3]+9^4*arr[4]+9^5*arr[5] >>> 0
-
-    // Si el resultado ya está en el cache, lo devolvemos directamente
-    if (cacheResultados.has(clave)) {
-        return cacheResultados.get(clave);
-    }
-
-    // Calculamos el resultado y lo almacenamos en el cache
-    const resultado = multicombinatorio5(a, b, c, d, e, f);
-    cacheResultados.set(clave, resultado);
-
-    return resultado;
-}
-
-//Formas dividir conjunto de elementos distinguibles tamaño a en 4 cajas distinguibles de tamaños b,c,d,a-s en las que no importa el orden
 function multicombinatorio5(a, b, c, d, e, f) {
     if (a===f){
         return 1
     }
-
-    function factorial(n, min = 0) {
-        let result = 1;
-        for (let i = n; i > min; i--) {
-            result *= i;
-        }
-        return result;
-    }
-
-    let numerador = factorial(a); // (a! / f!)
-    let denominador = factorial(b) * factorial(c) * factorial(d) * factorial(e) * factorial(f); // b! * c! * d! * e!
-    
+    const numerador = factorial[a]; // (a! / f!)
+    const denominador = factorial[b] * factorial[c] * factorial[d] * factorial[e] * factorial[f]; // b! * c! * d! * e!
     return numerador / denominador;
-
-
 }
 
 //SECCIÓN RESPUESTA
@@ -226,7 +138,7 @@ const misValoresRed = [['K', 'Q', 'J', '7', '6', '5', '4','1'],[8,4,4,4,4,4,4,8]
 //Funciones de comparación
 
 //0 es mano sobre 2 y 3 y 1 es mano sobre 3. 0 y 1 amigos 2 y 3 contrincantes. Valores ha de estar ordenado en orden descendente de grande.
-function relorden_musipaper(Cuatrimano, i, j, n_valores, soymano = [], grande = true) {
+function relorden_musipaper(Cuatrimano, i, j, n_valores, soymano = undefined, grande = true) {
     for (let k = grande ? 0 : n_valores - 1; grande ? k < n_valores : k >= 0; k += grande ? 1 : -1) {
         if (Cuatrimano[k][i] > Cuatrimano[k][j]) {
             return 1;
@@ -234,7 +146,7 @@ function relorden_musipaper(Cuatrimano, i, j, n_valores, soymano = [], grande = 
             return -1;
         }
     }
-    return Array.isArray(soymano) ? 0 : soymano ? 1 : -1;
+    return (soymano == undefined) ? 0 : soymano ? 1 : -1;
 }
 
 function valor_musipaper(carta) {
@@ -245,8 +157,9 @@ function valor_musipaper(carta) {
     }
 }
 
-function relordenJ_musipaper(Cuatrimano,i,j,n_valores,soymano=[]){
-    let [Juego_i,Juego_j] = [0,0]
+function relordenJ_musipaper(Cuatrimano,i,j,n_valores,soymano=undefined){
+    let Juego_i = 0;
+    let Juego_j = 0;
     for (let k=0; k<n_valores; k++){
         Juego_i += valor_musipaper(k)*Cuatrimano[k][i]
         Juego_j += valor_musipaper(k)*Cuatrimano[k][j]
@@ -257,116 +170,82 @@ function relordenJ_musipaper(Cuatrimano,i,j,n_valores,soymano=[]){
         return 1;
     } else if (Juego_i > 30 & Juego_j > 30) {
         if (Juego_i === 31) {
-            return Juego_j === 31 ? Array.isArray(soymano) ? 0 : soymano ? 1 : -1 : 1;
+            return Juego_j === 31 ? (soymano == undefined) ? 0 : soymano ? 1 : -1 : 1;
         } else if (Juego_i === 32) {
-            return Juego_j === 31 ? -1 : Juego_j === 32 ? Array.isArray(soymano) ? 0 : soymano ? 1 : -1 : 1;
+            return Juego_j === 31 ? -1 : Juego_j === 32 ? (soymano == undefined) ? 0 : soymano ? 1 : -1 : 1;
         } else {
-            return Juego_j === 31 || Juego_j === 32 ? -1 : Juego_i > Juego_j ? 1 : Juego_i === Juego_j ? Array.isArray(soymano) ? 0 : soymano ? 1 : -1 : -1;
+            return Juego_j === 31 || Juego_j === 32 ? -1 : Juego_i > Juego_j ? 1 : Juego_i === Juego_j ? (soymano == undefined) ? 0 : soymano ? 1 : -1 : -1;
         }
     } else {
-        return Juego_i > Juego_j ? 1 : Juego_i === Juego_j ? Array.isArray(soymano) ? 0 : soymano ? 1 : -1 : -1;
+        return Juego_i > Juego_j ? 1 : Juego_i === Juego_j ? (soymano == undefined) ? 0 : soymano ? 1 : -1 : -1;
     }
 }
 
 //No asume que las manos tienen 4 elementos. Asegurarse correcto orden de las entradas y correcta inserción de arrays
-function relordenP_musipaper(Cuatrimano,i,j,n_valores,soymano=[],longitudmano=4){
-    const repetpares_i = {};
-    const repetpares_j = {};
-    const mitad = longitudmano/2
+function relordenP_musipaper(Cuatrimano,i,j,n_valores,soymano=undefined,longitudmano=4){
+    let seen_i = 0;
+    let seen_j = 0;
+    let duplex_i = false;
+    let i_duplex = 0;
+    let duplex_j = false;
+    let j_duplex = 0;
+    let max_i = 0;
+    let i_max = 0;
+    let max_j = 0;
+    let j_max = 0;
     for (let k=0; k<n_valores; k++){
-        if (Cuatrimano[k][i] < 2) continue;
-        const l = Cuatrimano[k][i];
-        repetpares_i[l] = l in repetpares_i ? insertarOrdenado(repetpares_i[l],k,l) : Array(l).fill(k);
-        if (l > mitad){
-            break;
-        }
-    }
-    for (let k=0; k<n_valores; k++){
-        if (Cuatrimano[k][j] < 2) continue;
-        const l = Cuatrimano[k][j];
-        repetpares_j[l] = l in repetpares_j ? insertarOrdenado(repetpares_j[l],k,l) : Array(l).fill(k);
-        if (l > mitad){
-            break;
-        }
-    }
-    Object.keys(repetpares_i).forEach((clave) =>{
-        const reps = Math.floor(repetpares_i[clave].length/clave);
-        const lnew = reps*clave;
-        if (!(lnew in repetpares_i)){
-            repetpares_i[lnew] = []
-        }
-        if (reps>1){
-            repetpares_i[clave].forEach((v,idx) => {
-                if (idx%clave===0) {
-                    insertarOrdenado(repetpares_i[lnew],v,parseInt(clave))
-                    delete repetpares_i[clave]
-                }
-            });
-        }
-    });
-    Object.keys(repetpares_j).forEach((clave) =>{
-        const reps = Math.floor(repetpares_j[clave].length/clave);
-        const lnew = reps*clave;
-        if (!(lnew in repetpares_j)){
-            repetpares_j[lnew] = []
-        }
-        if (reps>1){
-            repetpares_j[clave].forEach((v,idx) => {
-                if (idx%clave===0) {
-                    insertarOrdenado(repetpares_j[lnew],v,parseInt(clave))
-                    delete repetpares_j[clave]
-                }
-            });
-        }
-    });
-    for (let l=longitudmano; l>1; l--){
-        if (l in repetpares_i){
-            if (!(l in repetpares_j)){
-                return 1
-            } else{
-                for (let i = 0; i < repetpares_i[l].length; i++) {
-                    if (repetpares_i[l][i] < repetpares_j[l][i]) {
-                        return 1;  // Sale de la función completamente
-                    } else if (repetpares_i[l][i] > repetpares_j[l][i]) {
-                        return -1;
-                    }
-                }
-                return Array.isArray(soymano) ? 0 : soymano ? 1 : -1 
+        seen_i+=Cuatrimano[k][i]
+        seen_j+=Cuatrimano[k][j]
+        //Esto utiliza que cuatrimano está ordenado, la posición con menor i indica la carta mas grande y sucesivamente
+        if (Cuatrimano[k][i]>max_i){
+            max_i = Cuatrimano[k][i];
+            i_max = i;
+            if (Cuatrimano[k][i]==4){
+                duplex_i = true;
+                i_duplex = i;
             }
-            
-        } else if (l in repetpares_j){
-            return -1
+        } else if (Cuatrimano[k][i]> 1 & (Cuatrimano[k][i] == max_i)){
+            max_i = 4;
+            duplex_i = true;
+            i_duplex = i;
+        }
+        if (Cuatrimano[k][j]>max_j){
+            max_j = Cuatrimano[k][j];
+            j_max = j;
+            if (Cuatrimano[k][j]==4){
+                duplex_j = true;
+            }
+        } else if (Cuatrimano[k][j]> 1 & (Cuatrimano[k][j] == max_i)){
+            max_j = 4;
+            duplex_j = true;
+            j_duplex = j;
+        }
+        if ((seen_i>longitudmano) & (seen_j>longitudmano)){
+            break;
         }
     }
+
+    return max_i>max_j ? 1 : max_j>max_i ? -1 : i_max < j_max ? 1 : j_max < i_max ? i_duplex < j_duplex ? 1 : j_duplex < i_duplex ? -1 : -1 : (soymano == undefined) ? 0 : soymano ? 1 : -1;
 }
 
 //Funcion que calcula si ganas o pierdes en la configuracion respectiva puesta en forma de matriz columnas: 
 // fmax,[4-mano_amiga1.length,4-mano_amiga2.length,4,4,n_cartas_rest]
 function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores=misValoresRed,cuatrimanostotales=1){
     const newFrec = valores[0].reduce((acc, _, i) => acc = acc * multicombinatorio5(fmax[i], Cuatrimano[i][0], Cuatrimano[i][1], Cuatrimano[i][2], Cuatrimano[i][3], Cuatrimano[i][4]),1)
-    let Cuatrimano_temp = Cuatrimano.map(row => row.slice());
-    if (cuatrimanostotales === 0){
-        console.log('hola1')
-        console.log(mano_amiga1_indeces)
-        console.log(mano_amiga2_indeces)
-        console.log(Cuatrimano_temp)
-        console.log(fmax)
-        console.log(newFrec)
-    }
     
     for(let i=0; i<n_valores; i++){
-        Cuatrimano_temp[i][0] += mano_amiga1_indeces[i];
-        Cuatrimano_temp[i][1] += mano_amiga2_indeces[i];
+        Cuatrimano[i][0] += mano_amiga1_indeces[i];
+        Cuatrimano[i][1] += mano_amiga2_indeces[i];
     }
     
 
     //Rehacemos las relaciones de orden
     //Claro, ahora tenemos que realizar casuística
 
-    let a1e1 = relorden_musipaper(Cuatrimano_temp,0,2,n_valores,soymano);
-    let a2e2 = relorden_musipaper(Cuatrimano_temp,1,3,n_valores,soymano);
-    let e1a2 = relorden_musipaper(Cuatrimano_temp,2,1,n_valores,true);
-    let a1e2 = relorden_musipaper(Cuatrimano_temp,0,3,n_valores,true);
+    let a1e1 = relorden_musipaper(Cuatrimano,0,2,n_valores,soymano);
+    let a2e2 = relorden_musipaper(Cuatrimano,1,3,n_valores,soymano);
+    let e1a2 = relorden_musipaper(Cuatrimano,2,1,n_valores,true);
+    let a1e2 = relorden_musipaper(Cuatrimano,0,3,n_valores,true);
     
     if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
         Juegos_Gano[0][0] += newFrec;
@@ -374,10 +253,10 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
         Juegos_Pierdo[0][0] += newFrec;
     }
 
-    a1e1 = relorden_musipaper(Cuatrimano_temp,0,2,n_valores,soymano,false);
-    a2e2 = relorden_musipaper(Cuatrimano_temp,1,3,n_valores,soymano,false);
-    e1a2 = relorden_musipaper(Cuatrimano_temp,2,1,n_valores,true,false);
-    a1e2 = relorden_musipaper(Cuatrimano_temp,0,3,n_valores,true,false);
+    a1e1 = relorden_musipaper(Cuatrimano,0,2,n_valores,soymano,false);
+    a2e2 = relorden_musipaper(Cuatrimano,1,3,n_valores,soymano,false);
+    e1a2 = relorden_musipaper(Cuatrimano,2,1,n_valores,true,false);
+    a1e2 = relorden_musipaper(Cuatrimano,0,3,n_valores,true,false);
     
     if ((a1e1 >= 0 & a1e2 >= 0) || (e1a2 === -1 & a2e2 >= 0)) {
         Juegos_Gano[0][1] += newFrec;
@@ -385,13 +264,13 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
         Juegos_Pierdo[0][1] += newFrec;
     }
     
-    a1e1 = relordenP_musipaper(Cuatrimano_temp,0,2,n_valores,soymano);
-    a2e2 = relordenP_musipaper(Cuatrimano_temp,1,3,n_valores,soymano);
-    e1a2 = relordenP_musipaper(Cuatrimano_temp,2,1,n_valores,true);
-    a1e2 = relordenP_musipaper(Cuatrimano_temp,0,3,n_valores,true);
+    a1e1 = relordenP_musipaper(Cuatrimano,0,2,n_valores,soymano);
+    a2e2 = relordenP_musipaper(Cuatrimano,1,3,n_valores,soymano);
+    e1a2 = relordenP_musipaper(Cuatrimano,2,1,n_valores,true);
+    a1e2 = relordenP_musipaper(Cuatrimano,0,3,n_valores,true);
 
-    let mano_enemiga1_pares_bool = valores[0].some((_,i) =>  Cuatrimano_temp[i][2]>1)
-    let mano_enemiga2_pares_bool = valores[0].some((_,i) =>  Cuatrimano_temp[i][3]>1)
+    let mano_enemiga1_pares_bool = valores[0].some((_,i) =>  Cuatrimano[i][2]>1)
+    let mano_enemiga2_pares_bool = valores[0].some((_,i) =>  Cuatrimano[i][3]>1)
     
     if (mano_enemiga1_pares_bool & !mano_enemiga2_pares_bool) {
         if ((a1e1 >= 0) || (e1a2 === -1)) {
@@ -413,17 +292,17 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
         }
     } 
     
-    a1e1 = relordenJ_musipaper(Cuatrimano_temp,0,2,n_valores,soymano);
-    a2e2 = relordenJ_musipaper(Cuatrimano_temp,1,3,n_valores,soymano);
-    e1a2 = relordenJ_musipaper(Cuatrimano_temp,2,1,n_valores,true);
-    a1e2 = relordenJ_musipaper(Cuatrimano_temp,0,3,n_valores,true);
+    a1e1 = relordenJ_musipaper(Cuatrimano,0,2,n_valores,soymano);
+    a2e2 = relordenJ_musipaper(Cuatrimano,1,3,n_valores,soymano);
+    e1a2 = relordenJ_musipaper(Cuatrimano,2,1,n_valores,true);
+    a1e2 = relordenJ_musipaper(Cuatrimano,0,3,n_valores,true);
     
     let mano_enemiga1_juego = 0;
     let mano_enemiga2_juego = 0;
     
     for (let k=0; k<n_valores; k++){
-        mano_enemiga1_juego += valor_musipaper(k)*Cuatrimano_temp[k][2]
-        mano_enemiga2_juego += valor_musipaper(k)*Cuatrimano_temp[k][3]
+        mano_enemiga1_juego += valor_musipaper(k)*Cuatrimano[k][2]
+        mano_enemiga2_juego += valor_musipaper(k)*Cuatrimano[k][3]
     }
 
     if (mano_enemiga1_juego > 30 & mano_enemiga2_juego < 31) {
@@ -452,6 +331,11 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
         }
     }
     //Nota: Podríamos probar con lógica bayesiana para evitarnos calcular frecuenciaPtotal y frecuenciaJtotal
+
+    for(let i=0; i<n_valores; i++){
+        Cuatrimano[i][0] -= mano_amiga1_indeces[i];
+        Cuatrimano[i][1] -= mano_amiga2_indeces[i];
+    }
 }
 
 //Fin funciones de comparación
@@ -474,49 +358,45 @@ function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_inde
         actualizar_densidad(Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales);
         cuatrimanostotales++;
     }
-    Aristas = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j]);
-    if (Aristas.length!=0){
-    //Aplicamos algoritmo del simplex, si Vertice(i,j) es maximal entonces negativa si es minimal positiva. Aristas.one es una arista con (i,j)=1
+    if (i==v-1){
+        return cuatrimanostotales;
+    }
+    const Inew = LGconsec(v,n,i,j);
+    cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',undefined,true);    
+    //Aplicamos algoritmo del simplex para recorrer todos los valores posibles que la coordenada i-esima puede tomar fijadas las anteriores
     //Mandamos un camino ascendente y uno descendente
-        let arista_max = undefined;
-        let arista_min = undefined;
-        let Aristas_new = Aristas.filter(arista=>{
-            let jj=0;
-            for (let ii=0;(ii<i) || (ii==i & jj<j); (jj==n-1) ? [ii,jj]=[ii+1,0] : [ii,jj]=[ii,jj+1]){
-                if (arista.arista[ii][jj]!=0){
-                    return false;
-                }
-            }
-            if (arista.arista[i][j]==1){
-                arista_max=arista;
-            } else if (arista.arista[i][j]==-1){
-                arista_min=arista;
-            } 
-            return true;
-        })
-        const Inew = LGconsec(v,n,i,j);
-        cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',Aristas_new,true);    
-        if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
-            const max_add = arista_max.maxadd(Vertice);
-            for (let l=1;l<max_add;l++){
-                const new_vertice = arista_max.addto(Vertice,l);
-                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split');
-            }
-            if (max_add>0){
-                const new_vertice = arista_max.addto(Vertice,max_add);
-                cuatrimanostotales = parametrizar(v,n,i,j,new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'ascend');
-            }
+    let arista_max = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j],[i,j],true);
+    let arista_min = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j],[i,j],false);
+    if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
+        const max_add = arista_max.maxadd(Vertice);
+        if (max_add == Infinity){
+            throw new Error('Fallo en primeras aristas');
         }
-        if (arista_min!=undefined & (ascend=='split'||ascend=='descend')){
-            const max_sub = arista_min.maxadd(Vertice);
-            for (let l=1;l<max_sub;l++){
-                const new_vertice = arista_min.addto(Vertice,l);
-                cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split');
-            }
-            if (max_sub>0){
-                const new_vertice = arista_min.addto(Vertice,max_sub);
-                cuatrimanostotales = parametrizar(v,n,i,j,new_vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'descend');
-            }
+        for (let l=1;l<max_add;l++){
+            Vertice = arista_max.addto(Vertice,l);
+            cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split');
+            Vertice = arista_max.addto(Vertice);
+        }
+        if (max_add>0){
+            Vertice = arista_max.addto(Vertice,max_add);
+            cuatrimanostotales = parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'ascend');
+            Vertice = arista_max.addto(Vertice,-max_add);
+        }
+    }
+    if (arista_min!=undefined & (ascend=='split'||ascend=='descend')){
+        const max_sub = arista_min.maxadd(Vertice);
+        if (max_sub == Infinity){
+            throw new Error('Fallo en primeras aristas');
+        }
+        for (let l=1;l<max_sub;l++){
+            Vertice = arista_min.addto(Vertice,l);
+            cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split');
+            Vertice = arista_min.addto(Vertice,-l);
+        }
+        if (max_sub>0){
+            Vertice = arista_min.addto(Vertice,max_sub);
+            cuatrimanostotales = parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'descend');
+            Vertice = arista_min.addto(Vertice,-max_sub);
         }
     }
     return cuatrimanostotales;
@@ -806,84 +686,7 @@ function probabilidad_conmus(mano_amiga1,mano_amiga2=[],soymano=true,tiro,cartas
 
 //SECCIÓN MUSIPAPER
 
-// toma un vector f y un vector l y devuelve el conjunto de las matrices len(f),len(l) que suman esos vectores, NO PASA NADA SI HAY 0's
-//Creamos los f y l posibles para un s
-function posibles_f(s,fmax) {
-    //Creamos f vértice
-    const initialArray = Array(fmax.length).fill(0)
-    const [imax,dif] = posibles_f_first_greater(s,fmax)
-    for (let i=0; i<imax; i++){
-        initialArray[i] = fmax[i]
-    }
-    initialArray[imax] = fmax[imax]-dif
-    const initialCoordinates = Array(fmax.length-1).fill(0)
-    //Creamos las aristas del vértice, es broma, no hace falta al ser muy simples. 
-    //Recorremos el conjunto con un algoritmo breath-first
-    const queue = [];
-    const visited = new Set();
-    
-    // Helper to check if an array has only non-negative numbers
-    const inBounds = (arr) => arr.every((x,index) => (x >= 0 & x <= fmax[index]));
-    
-    // Start BFS with the initial array
-    queue.push({ array: initialArray, coordinates: initialCoordinates });
-    visited.add(arrayToString(initialCoordinates));
-    
-    const result = [];
-    
-    while (queue.length > 0) {
-        const { array, coordinates } = queue.shift();
-    
-        // Add the current array to the result
-        result.push( array );
-    
-        // Try adding each step
-        for (let i = 0; i < imax; i++) {
-            let newArray = [...array];
-            newArray[i] = newArray[i]-1;
-            newArray[imax] = newArray[imax]+1;
-            const newCoordinates = [...coordinates];
-            newCoordinates[i] += 1;
-
-            // Check if the new array is valid and not visited
-            if (inBounds(newArray) & !visited.has(arrayToString(newCoordinates))) {
-                queue.push({ array: newArray, coordinates: newCoordinates });
-                visited.add(arrayToString(newCoordinates));
-            }
-        }
-        for (let i = imax+1; i < fmax.length; i++) {
-            let newArray = [...array];
-            newArray[i] = newArray[i]+1;
-            newArray[imax] = newArray[imax]-1;
-            const newCoordinates = [...coordinates];
-            newCoordinates[i-1] += 1;
-
-            // Check if the new array is valid and not visited
-            if (inBounds(newArray) & !visited.has(arrayToString(newCoordinates))) {
-                queue.push({ array: newArray, coordinates: newCoordinates });
-                visited.add(arrayToString(newCoordinates));
-            }
-        }
-    }
-    
-    return result;
-    
-}
-
-function posibles_f_first_greater(s,fmax){
-    let sum = 0
-    for (let i=0; i<fmax.length; i++){
-        sum += fmax[i]
-        const dif = sum-s
-        if (dif>=0){
-            return [i,dif]
-        }
-        
-    }
-    throw new Error('s es demasiado grande');
-}
-
-//Para las matrices, función Creamos un vértice matriz para f y l dados y su estela para calcular aristas
+//Para las matrices, función vértice matriz para f y l dados y su estela para calcular aristas
 function solVertice_extend_FL(f, l) {
     let EstelaMat = Array.from({ length: f.length }, () => new Array(l.length).fill(0));
     let VerticeMat = Array.from({ length: f.length }, () => new Array(l.length).fill(0));
@@ -985,184 +788,184 @@ function solVertice_extend_FL(f, l) {
 // Algoritmo busca caminos 
 
 // Función que obtiene las aristas de un VÉRTICE de una frontera especificada en IGNORE, cada vector arista es en realidad una función para acortar a O(n+v) de O(n*v) el proceso de sumar.
-function primeras_aristas_funcion_adicion_nocopy(V,ignore_type='',ignore=[],options='',optionsargument=[]){
+function primeras_aristas_funcion_adicion_nocopy(V,ignore_type='',ignore=[],point=[],sign=true){
     function ignoring(i,j){
         if (ignore_type == 'LG'){
             //menor estricto lexicográfico
             return i<=ignore[0] ? i<ignore[0] ? true : j<ignore[1] : false
         }
     }
-    const result = []
     const v = V.length
     const n = V[0].length
-    const Aristas = find_all_balanced_paths_bis(V,ignoring,options,optionsargument);
-    for (const arista of Aristas){
-        result.push(new matrix_to_adition(arista));
-    }
-    
-    return result
+    const arista = find_all_balanced_paths_one(V,ignoring,point,sign);
+    return arista == undefined ? undefined : new flat_matrix_to_adition(arista,v,n)
 }
 
 //TODAS las Aristas de un vértice general "positivas" tangentes a una frontera, algoritmo de musinator (la única parte realmente importante de todo el código)
-function find_all_balanced_paths_bis(V, ignoring=(i,j)=>{return false}, options='',optionsargument=[]) {
+
+function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sign) {
     let v = V.length;
     let n = V[0].length;
-    let A = []; //A de aristas, es el result
 
     //Encontramos las clases de zig-zag equivalencia (entradas no nulas conectadas por algún zig-zag)
     let Visited = new Set;
     let ZZequivalenceclasses_rows = {};
     let ZZequivalenceclasses_cols = {};
     let currentclass = 0;
-    for (let i=0;i<v;i++){
-        for (let j=0;j<n;j++){
-            if (V[i][j]==0 || Visited.has(i+v*j) || ignoring(i,j)) continue;
-            currentclass++;
-            Visited.add(i+v*j)
-            ZZequivalenceclasses_rows[i]=currentclass;
-            ZZequivalenceclasses_cols[j]=currentclass;
-            let queue = [];
-            queue.push([i,j,0])
-            while (queue.length>0){
-                const [inew,jnew,parity] = queue.shift();
-                for (let ii=0;ii<v;ii++){
-                    if (parity==1) break;
-                    if (V[ii][jnew]==0 || Visited.has(ii+v*jnew) || ignoring(ii,jnew)) continue;
-                    Visited.add(ii+v*j)
-                    ZZequivalenceclasses_rows[ii]=currentclass;
-                    ZZequivalenceclasses_cols[jnew]=currentclass;
-                    queue.push([ii,jnew,1])
-                }
-                for (let jj=0;jj<n;jj++){
-                    if (parity==2) break;
-                    if (V[inew][jj]==0 || Visited.has(inew+v*jj) || ignoring(inew,jj)) continue;
-                    Visited.add(inew+v*jj)
-                    ZZequivalenceclasses_rows[inew]=currentclass;
-                    ZZequivalenceclasses_cols[jj]=currentclass;
-                    queue.push([inew,jj,2])
-                }
+    let j0 = point[1];
+    for (let i0=point[0];i0<v;(j0==(n-1)) ? [i0,j0]=[i0+1,0] : j0++){
+        if (V[i0][j0]==0 || Visited.has(i0+v*j0) || ignoring(i0,j0)) continue;
+        currentclass++;
+        Visited.add(i0+v*j0)
+        ZZequivalenceclasses_rows[i0]=currentclass;
+        ZZequivalenceclasses_cols[j0]=currentclass;
+        let queue = [];
+        queue.push([i0,j0,0])
+        while (queue.length>0){
+            const [inew,jnew,parity] = queue.shift();
+            for (let ii=0;ii<v;ii++){
+                if (parity==1) break;
+                if (V[ii][jnew]==0 || Visited.has(ii+v*jnew) || ignoring(ii,jnew)) continue;
+                Visited.add(ii+v*jnew)
+                ZZequivalenceclasses_rows[ii]=currentclass;
+                ZZequivalenceclasses_cols[jnew]=currentclass;
+                queue.push([ii,jnew,1])
+            }
+            for (let jj=0;jj<n;jj++){
+                if (parity==2) break;
+                if (V[inew][jj]==0 || Visited.has(inew+v*jj) || ignoring(inew,jj)) continue;
+                Visited.add(inew+v*jj)
+                ZZequivalenceclasses_rows[inew]=currentclass;
+                ZZequivalenceclasses_cols[jj]=currentclass;
+                queue.push([inew,jj,2])
             }
         }
     }
 
     // No crear caminos con elementos cuyas aristas asociadas ya hemos encontrado
     // evitar duplicidades en el output, estos serán los menores en el LG.
-    let visited = new Set();
-    for (i1=0;i1<v;i1++){
-        for (j1=0;j1<n;j1++){
-            // Verifica que la entrada es válida
-            const objective = ZZequivalenceclasses_cols[j1] ? ZZequivalenceclasses_cols[j1] : undefined;
-            if (options=='one'){
-                [i1,j1]=optionsargument;
-                if (!objective) return [];
-            } else if (ignoring(i1,j1) || V[i1][j1]!= 0 || !objective) continue; 
-            visited.add(i1+v*j1);
-            let paths = []; // Lista de caminos activos: {[camino, última coordenada], ...}
-        
-            // Inicializa el primer camino con el punto inicial
-            let initial_path = Array.from({ length: v }, () => new Array(n).fill(0));
-            initial_path[i1][j1] = 1; // Marca la posición inicial con un 1
-            let zzequiv = new Set();
-            if (ZZequivalenceclasses_rows[i1]){
-                zzequiv.add(ZZequivalenceclasses_rows[i1])
-            }
-            const I=[i1,j1];
-            paths.push([initial_path, I, 1, zzequiv]); 
-            //Incluye camino, coordenadas, paridad y clases de equivalencia con las que conecta
-            //Si llegamos a la clase de equivalencia de la columna hemos terminado, si no la hay es que no hay aristas posibles.
-            
-            while (paths.length>0){
-                let new_paths = []; // Nuevos caminos generados en esta iteración
-                // Procesa cada camino activo
-                for (let p=0;p<paths.length;p++){
-                    const current_path_data = paths[p];
-                    const current_path = current_path_data[0];
-                    const last_coords = current_path_data[1]; // Coordenadas del último cambio
-                    const current_parity = current_path_data[2];
-                    const current_zzequiv = current_path_data[3];
-            
-                    const i = last_coords[0];
-                    const j = last_coords[1];
-            
-                    // Expandir por fila
-                    if (current_parity == 1){ //Paso impar, añadir -1
-                        for (let col=0;col<n;col++){
-                            if (visited.has(i+v*col) || ignoring(i,col)) continue;
-                            if (current_path[i][col] == 0){
-                                if (V[i][col] != 0){
-                                    // Crear un nuevo camino
-                                    let new_path = current_path.map(row=>[...row]);
-                                    new_path[i][col] = -1; // Alterna paridad
-                
-                                    // Agregar a la lista de nuevos caminos
-                                    new_paths.push([new_path, [i, col], 0, current_zzequiv]);
-                                } 
-                            }
-                        }
+    let [i1,j1] = point;
+    const viable = ZZequivalenceclasses_cols[j1] ? ZZequivalenceclasses_rows[i1] ? true : false : false;
+    if (!viable){ 
+        return undefined
+    }
+    //Algoritmo Musipaper
+    let paths = []; // Lista de caminos activos: {[camino, última coordenada], ...}
+    const initial_parity = V[i1][j1]==0 ? 1 : -1;
+    // Inicializa el primer camino con el punto inicial
+    let initial_path = new Int8Array(v * n);
+    const I=[i1,j1];
+    let start_point = I;
+    if (initial_parity==1 & sign){
+        let zzequiv = new Set();
+        if (ZZequivalenceclasses_rows[i1]){
+            zzequiv.add(ZZequivalenceclasses_rows[i1])
+        }
+        initial_path[i1*n + j1] = 1;
+        paths.push([initial_path, I, initial_parity, zzequiv, start_point, ZZequivalenceclasses_cols[j1]]);
+    } else{
+        let zzequiv = new Set();
+        initial_path[i1*n + j1] = 1;
+        if (sign){
+            paths.push([initial_path, I, -initial_parity, zzequiv, start_point, ZZequivalenceclasses_cols[j1]]);
+        } else{
+            for (let j2=0; j2<n ; j2++){
+                const objective = ZZequivalenceclasses_cols[j2] ? ZZequivalenceclasses_cols[j2] : undefined;
+                if (!((!objective) || ignoring(i1,j2) || j2==j1)){
+                    zzequiv = new Set();
+                    if (ZZequivalenceclasses_rows[i1] & V[i1][j2]==0){
+                        zzequiv.add(ZZequivalenceclasses_rows[i1])
                     }
-            
-                    // Expandir por columna
-                    if (current_parity == 0){ // Paso par, añadir 1
-                        if (j==I[1]){
-                            //Congratulaciones volviste a la posición original, has ganado, tienes una arista
-                            if (options=='anynonzero'){
-                                if (current_path[optionsargument[0]][optionsargument[1]]!=0){
-                                    return [current_path];
-                                }
-                            } else {
-                                A.push(current_path);
-                                if (options=='one'){
-                                    return A;
-                                }
-                            }
-                            continue;
-                        }
-                        for (let row = 0; row<v;row++){
-                            if (visited.has(row+v*j) || ignoring(row,j)) continue;
-                            if (current_path[row][j] == 0){
-                                if (V[row][j] !== 0){
-                                    // Crear un nuevo camino
-                                    let new_path = current_path.map(row=>[...row]);
-                                    new_path[row][j] = 1; // Alterna paridad
-                
-                                    // Agregar a la lista de nuevos caminos
-                                    new_paths.push([new_path, [row, j], 1,current_zzequiv]);
-                                } else if (ZZequivalenceclasses_rows[row]!=undefined & !current_zzequiv.has(objective)){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
-                                    if (current_zzequiv.has(ZZequivalenceclasses_rows[row])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
-                                    // no nulos del vértice de la frontera en dicha fila y por tanto en el siguiente paso no podría añadir un -1 luego ese posible camino se puede ignorar.
-                                    // Crear un nuevo camino
-                                    let new_path = current_path.map(row=>[...row]);
-                                    new_path[row][j] = 1; // Alterna paridad
-                                    let new_zzequiv = new Set(current_zzequiv);
-                                    new_zzequiv.add(ZZequivalenceclasses_rows[row]);
-                                    // Agregar a la lista de nuevos caminos
-                                    new_paths.push([new_path, [row, j], 1,new_zzequiv]);
-                                } 
-                            }
-                        }
-                    }
+                    let new_initial_path = new Int8Array(v * n);
+                    new_initial_path[i1*n + j1] = -1;
+                    new_initial_path[i1*n + j2] = 1;
+                    start_point = [i1,j2];
+                    //Es como si vinieramos de i1, j2
+                    paths.push([new_initial_path, I, initial_parity, zzequiv, start_point, objective]);
                 }
-            
-                // Actualiza caminos
-                paths = new_paths;
-            }
-            if (options=='one'){
-                return A;
             }
         }
     }
-    return A;
+    //Incluye camino, coordenadas, paridad y clases de equivalencia con las que conecta
+    //Si llegamos a la clase de equivalencia de la columna hemos terminado, si no la hay es que no hay aristas posibles.
+    
+    while (paths.length>0){
+        let new_paths = []; // Nuevos caminos generados en esta iteración
+        // Procesa cada camino activo
+        for (let p=0;p<paths.length;p++){
+            const current_path_data = paths[p];
+            const current_path = current_path_data[0];
+            const last_coords = current_path_data[1]; // Coordenadas del último cambio
+            const current_parity = current_path_data[2];
+            const current_zzequiv = current_path_data[3];
+            const start_point = current_path_data[4];
+            const current_objective = current_path_data[5];
+    
+            const i = last_coords[0];
+            const j = last_coords[1];
+    
+            // Expandir por fila
+            if (current_parity == 1){ //Paso impar, añadir -1
+                for (let col=0;col<n;col++){
+                    if (V[i][col] == 0 || ignoring(i,col)) continue;
+                    if (current_path[i*n + col] == 0){
+                        // Crear un nuevo camino
+                        let new_path = current_path.map(v=>v);
+                        new_path[i*n + col] = -1; // Alterna paridad
+    
+                        // Agregar a la lista de nuevos caminos
+                        new_paths.push([new_path, [i, col], -1, current_zzequiv, start_point, current_objective]);
+                    }
+                }
+            }
+    
+            // Expandir por columna
+            if (current_parity == -1){ // Paso par, añadir 1
+                if (j==start_point[1]){
+                    //Congratulaciones volviste a la posición original, has ganado, tienes una arista
+                    return current_path;
+                    continue;
+                }
+                for (let row = 0; row<v;row++){
+                    if (ignoring(row,j)) continue;
+                    if (current_path[row*n + j] == 0){
+                        if (V[row][j] !== 0){
+                            // Crear un nuevo camino
+                            let new_path = current_path.map(v=>v);
+                            new_path[row*n + j] = 1; // Alterna paridad
+        
+                            // Agregar a la lista de nuevos caminos
+                            new_paths.push([new_path, [row, j], 1,current_zzequiv, start_point, current_objective]);
+                        } else if (ZZequivalenceclasses_rows[row]!=undefined & !current_zzequiv.has(current_objective)){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
+                            if (current_zzequiv.has(ZZequivalenceclasses_rows[row])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
+                            // no nulos del vértice de la frontera en dicha fila y por tanto en el siguiente paso no podría añadir un -1 luego ese posible camino se puede ignorar.
+                            // Crear un nuevo camino
+                            let new_path = current_path.map(v=>v);
+                            new_path[row*n + j] = 1; // Alterna paridad
+                            let new_zzequiv = new Set(current_zzequiv);
+                            new_zzequiv.add(ZZequivalenceclasses_rows[row]);
+                            // Agregar a la lista de nuevos caminos
+                            new_paths.push([new_path, [row, j], 1,new_zzequiv, start_point, current_objective]);
+                        } 
+                    }
+                }
+            }
+        }
+    
+        // Actualiza caminos
+        paths = new_paths;
+    }
+    return undefined;
 }
 
-class matrix_to_adition {
-    constructor(M) {
+class flat_matrix_to_adition {
+    constructor(M,v,n) {
         // Extraer las posiciones y valores de los elementos no nulos de M
-        this.arista = M;
         this.nonZeroElements = [];
-        for (let i = 0; i < M.length; i++) {
-            for (let j = 0; j < M[i].length; j++) {
-                if (M[i][j] !== 0) {
-                    this.nonZeroElements.push([i, j, M[i][j]]);
+        for (let i = 0; i < v; i++) {
+            for (let j = 0; j < n; j++) {
+                if (M[i*n + j] !== 0) {
+                    this.nonZeroElements.push([i, j, M[i*n + j]]);
                 }
             }
         }
@@ -1172,11 +975,10 @@ class matrix_to_adition {
     // y en maxadd una función que suma M con otra matriz N primero realizando un deepcopy de N
     addto = function (N,t=1) {
         // Sumar los elementos no nulos de M a la matriz N
-        let NN = N.map(row => row.slice());
         for (const element of this.nonZeroElements) {
-            NN[element[0]][element[1]] += t*element[2];
+            N[element[0]][element[1]] += t*element[2];
         }
-        return NN;
+        return N;
     };
     maxadd = function (N) {
         let max = Infinity;
