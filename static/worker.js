@@ -365,8 +365,8 @@ function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_inde
     cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',undefined,true);    
     //Aplicamos algoritmo del simplex para recorrer todos los valores posibles que la coordenada i-esima puede tomar fijadas las anteriores
     //Mandamos un camino ascendente y uno descendente
-    let arista_max = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j],[i,j],true);
-    let arista_min = primeras_aristas_funcion_adicion_nocopy(Vertice,'LG',[i,j],[i,j],false);
+    let arista_max = primeras_aristas_funcion_adicion_nocopy(Vertice,[i,j],[i,j],true);
+    let arista_min = primeras_aristas_funcion_adicion_nocopy(Vertice,[i,j],[i,j],false);
     if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
         const max_add = arista_max.maxadd(Vertice);
         if (max_add == Infinity){
@@ -788,12 +788,11 @@ function solVertice_extend_FL(f, l) {
 // Algoritmo busca caminos 
 
 // Función que obtiene las aristas de un VÉRTICE de una frontera especificada en IGNORE, cada vector arista es en realidad una función para acortar a O(n+v) de O(n*v) el proceso de sumar.
-function primeras_aristas_funcion_adicion_nocopy(V,ignore_type='',ignore=[],point=[],sign=true){
+function primeras_aristas_funcion_adicion_nocopy(V,ignore=[],point=[],sign=true){
     function ignoring(i,j){
-        if (ignore_type == 'LG'){
-            //menor estricto lexicográfico
-            return i<=ignore[0] ? i<ignore[0] ? true : j<ignore[1] : false
-        }
+        const ig0 = ignore[0];
+        const ig1 = ignore[1];
+        return i !== ig0 ? i<ig0 : j<ig1;
     }
     const v = V.length
     const n = V[0].length
