@@ -2,6 +2,7 @@
 
 //SECCIÓN OPERACIONES RECURRENTES
 
+
 // Helper to hash arrays as strings 
 const arrayToString = (arr) => arr.join(',');
 
@@ -43,9 +44,7 @@ function multicombinatorio5(a, b, c, d, e, f) {
     if (a===f){
         return 1
     }
-    const numerador = factorial[a]; // (a! / f!)
-    const denominador = factorial[b] * factorial[c] * factorial[d] * factorial[e] * factorial[f]; // b! * c! * d! * e!
-    return numerador / denominador;
+    return factorial[a] / (factorial[b] * factorial[c] * factorial[d] * factorial[e] * factorial[f]);
 }
 
 //SECCIÓN RESPUESTA
@@ -135,6 +134,12 @@ const FrasesGanar = ['Les vamos a dar clases a esta pareja','Me juego la Naval E
 const misValores = ['K', '3', 'Q', 'J', '7', '6', '5', '4', '2', '1'];
 const misValoresRed = [['K', 'Q', 'J', '7', '6', '5', '4','1'],[8,4,4,4,4,4,4,8]];
 
+//Pasar de números a cartas INT8ARRAY, HAY MENOS DE 16 CARTAS DISTINTAS POR ESO SIRVE
+const valor_musipaper = new Int8Array(misValores.length); // or Float64Array
+for (let k = 0; k < misValores.length; k++) {
+    valor_musipaper[k] = (k <= 2) ? 10 : parseInt(misValoresRed[0][k]);
+}
+
 //Funciones de comparación
 
 //0 es mano sobre 2 y 3 y 1 es mano sobre 3. 0 y 1 amigos 2 y 3 contrincantes. Valores ha de estar ordenado en orden descendente de grande.
@@ -149,20 +154,12 @@ function relorden_musipaper(Cuatrimano, i, j, n_valores, soymano = undefined, gr
     return (soymano == undefined) ? 0 : soymano ? 1 : -1;
 }
 
-function valor_musipaper(carta) {
-    if ([0,1,2].includes(carta)) {
-        return 10;
-    } else{
-        return parseInt(misValoresRed[0][carta]);
-    }
-}
-
 function relordenJ_musipaper(Cuatrimano,i,j,n_valores,soymano=undefined){
     let Juego_i = 0;
     let Juego_j = 0;
     for (let k=0; k<n_valores; k++){
-        Juego_i += valor_musipaper(k)*Cuatrimano[k][i]
-        Juego_j += valor_musipaper(k)*Cuatrimano[k][j]
+        Juego_i += valor_musipaper[k]*Cuatrimano[k][i]
+        Juego_j += valor_musipaper[k]*Cuatrimano[k][j]
     }
     if (Juego_i < 31 & Juego_j > 30) {
         return -1;
@@ -301,8 +298,8 @@ function actualizar_densidad(Cuatrimano,Juegos_Gano,Juegos_Pierdo,mano_amiga1_in
     let mano_enemiga2_juego = 0;
     
     for (let k=0; k<n_valores; k++){
-        mano_enemiga1_juego += valor_musipaper(k)*Cuatrimano[k][2]
-        mano_enemiga2_juego += valor_musipaper(k)*Cuatrimano[k][3]
+        mano_enemiga1_juego += valor_musipaper[k]*Cuatrimano[k][2]
+        mano_enemiga2_juego += valor_musipaper[k]*Cuatrimano[k][3]
     }
 
     if (mano_enemiga1_juego > 30 & mano_enemiga2_juego < 31) {
@@ -351,7 +348,7 @@ function LGconsec(v,n,i,j){
         return [i,j+1];
     }
 }
-function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,ascend='split',Aristas=undefined, seen=false) {
+function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,ascend='split',seen=false) {
     //Vertice es un vértice de la frontera "virtual" F_{<_LG(i,j)} (MENOR ESTRICTO)
     //Actualizamos densidades en los casos base
     if (!seen){ 
@@ -362,11 +359,12 @@ function parametrizar(v,n,i,j,Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_inde
         return cuatrimanostotales;
     }
     const Inew = LGconsec(v,n,i,j);
-    cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',undefined,true);    
+    cuatrimanostotales = parametrizar(v,n,Inew[0],Inew[1],Vertice,Juegos_Gano,Juegos_Pierdo,mano_amiga1_indeces,mano_amiga2_indeces,n_valores,soymano,fmax,valores,cuatrimanostotales,'split',true);    
     //Aplicamos algoritmo del simplex para recorrer todos los valores posibles que la coordenada i-esima puede tomar fijadas las anteriores
     //Mandamos un camino ascendente y uno descendente
-    let arista_max = primeras_aristas_funcion_adicion_nocopy(Vertice,[i,j],[i,j],true);
-    let arista_min = primeras_aristas_funcion_adicion_nocopy(Vertice,[i,j],[i,j],false);
+    const Aristas = (j!==n-1) ? primeras_aristas_funcion_adicion_nocopy(Vertice,[i,j],[i,j],ascend) : [undefined,undefined];
+    const arista_max = Aristas[0];
+    const arista_min = Aristas[1];
     if (arista_max!=undefined & (ascend=='split'||ascend=='ascend')){
         const max_add = arista_max.maxadd(Vertice);
         if (max_add == Infinity){
@@ -788,7 +786,7 @@ function solVertice_extend_FL(f, l) {
 // Algoritmo busca caminos 
 
 // Función que obtiene las aristas de un VÉRTICE de una frontera especificada en IGNORE, cada vector arista es en realidad una función para acortar a O(n+v) de O(n*v) el proceso de sumar.
-function primeras_aristas_funcion_adicion_nocopy(V,ignore=[],point=[],sign=true){
+function primeras_aristas_funcion_adicion_nocopy(V,ignore=[],point=[],ascend=''){
     function ignoring(i,j){
         const ig0 = ignore[0];
         const ig1 = ignore[1];
@@ -796,51 +794,51 @@ function primeras_aristas_funcion_adicion_nocopy(V,ignore=[],point=[],sign=true)
     }
     const v = V.length
     const n = V[0].length
-    const arista = find_all_balanced_paths_one(V,ignoring,point,sign);
-    return arista == undefined ? undefined : new flat_matrix_to_adition(arista,v,n)
-}
-
-//TODAS las Aristas de un vértice general "positivas" tangentes a una frontera, algoritmo de musinator (la única parte realmente importante de todo el código)
-
-function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sign) {
-    let v = V.length;
-    let n = V[0].length;
-
-    //Encontramos las clases de zig-zag equivalencia (entradas no nulas conectadas por algún zig-zag)
+    //Encontramos las clases de zig-zag equivalencia (entradas no nulas conectadas por algún zig-zag) previas
     let ZZequivalenceclasses_rows = {};
     let ZZequivalenceclasses_cols = {};
     let ZZZequivalence_old = {};
     let currentclass = 0;
-    let j0 = point[1];
-    for (let i0=point[0];i0<v;(j0==(n-1)) ? [i0,j0]=[i0+1,0] : j0++){
-        if (V[i0][j0]==0) continue;
-        if (i0 in ZZequivalenceclasses_rows){
-            if (j0 in ZZequivalenceclasses_cols){
-                //Actualizamos el mapa que nos dice qué clases de equivalencia son en realidad la misma 
-                let ZZZequivalence_current = {[ZZZequivalence_old[ZZequivalenceclasses_rows[i0]]]: ZZZequivalence_old[ZZequivalenceclasses_cols[j0]]};
-                for (k=1;k<=currentclass;k++){
-                    let p = ZZZequivalence_old[k];
-                    ZZZequivalence_old[k] = ZZZequivalence_current[p] ?? p;
-                }
-            } 
-            ZZequivalenceclasses_cols[j0]=ZZequivalenceclasses_rows[i0];
-        } else if (j0 in ZZequivalenceclasses_cols){
-            ZZequivalenceclasses_rows[i0]=ZZequivalenceclasses_cols[j0];
-        } else {
-            currentclass++;
-            ZZZequivalence_old[currentclass]=currentclass;
-            ZZequivalenceclasses_rows[i0]=currentclass;
-            ZZequivalenceclasses_cols[j0]=currentclass;
+    for (let i0=point[0];i0<v;i0++){ 
+        for (let j0 = point[1];j0<n;j0++){
+            if (V[i0][j0]==0) continue;
+            if (i0 in ZZequivalenceclasses_rows){
+                if (j0 in ZZequivalenceclasses_cols){
+                    //Actualizamos el mapa que nos dice qué clases de equivalencia son en realidad la misma 
+                    for (k=1;k<=currentclass;k++){
+                        ZZZequivalence_old[k] = ZZZequivalence_old[k]==ZZZequivalence_old[ZZequivalenceclasses_cols[j0]] ? ZZZequivalence_old[ZZequivalenceclasses_rows[i0]] : ZZZequivalence_old[k];
+                    }
+                } 
+                ZZequivalenceclasses_cols[j0]=ZZequivalenceclasses_rows[i0];
+            } else if (j0 in ZZequivalenceclasses_cols){
+                ZZequivalenceclasses_rows[i0]=ZZequivalenceclasses_cols[j0];
+            } else {
+                currentclass++;
+                ZZZequivalence_old[currentclass]=currentclass;
+                ZZequivalenceclasses_rows[i0]=currentclass;
+                ZZequivalenceclasses_cols[j0]=currentclass;
+            }
         }
     }
+    const viable = ZZequivalenceclasses_cols[point[1]] ? ZZequivalenceclasses_rows[point[0]] ? true : false : false;
+    if (!viable){ 
+        return [undefined,undefined];
+    }
+    const arista_max = ascend!='descend' ? find_all_balanced_paths_one(V,ignoring,point,true,ZZequivalenceclasses_rows,ZZequivalenceclasses_cols,ZZZequivalence_old) : undefined;
+    const arista_min = ascend!='ascend' ? find_all_balanced_paths_one(V,ignoring,point,false,ZZequivalenceclasses_rows,ZZequivalenceclasses_cols,ZZZequivalence_old) : undefined;
+    return Aristas = [arista_max == undefined ? undefined : new flat_matrix_to_adition(arista_max,v,n),arista_min == undefined ? undefined : new flat_matrix_to_adition(arista_min,v,n)]
+}
+
+//TODAS las Aristas de un vértice general "positivas" tangentes a una frontera, algoritmo de musinator (la única parte realmente importante de todo el código)
+
+function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sign,ZZequivalenceclasses_rows,ZZequivalenceclasses_cols,ZZZequivalence_old) {
+    let v = V.length;
+    let n = V[0].length;
 
     // No crear caminos con elementos cuyas aristas asociadas ya hemos encontrado
     // evitar duplicidades en el output, estos serán los menores en el LG.
-    let [i1,j1] = point;
-    const viable = ZZequivalenceclasses_cols[j1] ? ZZequivalenceclasses_rows[i1] ? true : false : false;
-    if (!viable){ 
-        return undefined
-    }
+    let i1 = point[0];
+    let j1 = point[1];
     //Algoritmo Musipaper
     let paths = []; // Lista de caminos activos: {[camino, última coordenada], ...}
     const initial_parity = V[i1][j1]==0 ? 1 : -1;
@@ -902,7 +900,7 @@ function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sig
                     if (V[i][col] == 0 || ignoring(i,col)) continue;
                     if (current_path[i*n + col] == 0){
                         // Crear un nuevo camino
-                        let new_path = current_path.map(v=>v);
+                        let new_path = current_path.slice();
                         new_path[i*n + col] = -1; // Alterna paridad
     
                         // Agregar a la lista de nuevos caminos
@@ -923,7 +921,7 @@ function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sig
                     if (current_path[row*n + j] == 0){
                         if (V[row][j] !== 0){
                             // Crear un nuevo camino
-                            let new_path = current_path.map(v=>v);
+                            let new_path = current_path.slice();
                             new_path[row*n + j] = 1; // Alterna paridad
         
                             // Agregar a la lista de nuevos caminos
@@ -932,7 +930,7 @@ function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sig
                             if (current_zzequiv.has(ZZZequivalence_old[ZZequivalenceclasses_rows[row]])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
                             // no nulos del vértice de la frontera en dicha fila y por tanto en el siguiente paso no podría añadir un -1 luego ese posible camino se puede ignorar.
                             // Crear un nuevo camino
-                            let new_path = current_path.map(v=>v);
+                            let new_path = current_path.slice();
                             new_path[row*n + j] = 1; // Alterna paridad
                             let new_zzequiv = new Set(current_zzequiv);
                             new_zzequiv.add(ZZZequivalence_old[ZZequivalenceclasses_rows[row]]);
