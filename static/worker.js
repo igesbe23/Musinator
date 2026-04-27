@@ -807,37 +807,30 @@ function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sig
     let n = V[0].length;
 
     //Encontramos las clases de zig-zag equivalencia (entradas no nulas conectadas por algún zig-zag)
-    let Visited = new Set;
     let ZZequivalenceclasses_rows = {};
     let ZZequivalenceclasses_cols = {};
+    let ZZZequivalence_old = {};
     let currentclass = 0;
     let j0 = point[1];
     for (let i0=point[0];i0<v;(j0==(n-1)) ? [i0,j0]=[i0+1,0] : j0++){
-        if (V[i0][j0]==0 || Visited.has(i0+v*j0) || ignoring(i0,j0)) continue;
-        currentclass++;
-        Visited.add(i0+v*j0)
-        ZZequivalenceclasses_rows[i0]=currentclass;
-        ZZequivalenceclasses_cols[j0]=currentclass;
-        let queue = [];
-        queue.push([i0,j0,0])
-        while (queue.length>0){
-            const [inew,jnew,parity] = queue.shift();
-            for (let ii=0;ii<v;ii++){
-                if (parity==1) break;
-                if (V[ii][jnew]==0 || Visited.has(ii+v*jnew) || ignoring(ii,jnew)) continue;
-                Visited.add(ii+v*jnew)
-                ZZequivalenceclasses_rows[ii]=currentclass;
-                ZZequivalenceclasses_cols[jnew]=currentclass;
-                queue.push([ii,jnew,1])
-            }
-            for (let jj=0;jj<n;jj++){
-                if (parity==2) break;
-                if (V[inew][jj]==0 || Visited.has(inew+v*jj) || ignoring(inew,jj)) continue;
-                Visited.add(inew+v*jj)
-                ZZequivalenceclasses_rows[inew]=currentclass;
-                ZZequivalenceclasses_cols[jj]=currentclass;
-                queue.push([inew,jj,2])
-            }
+        if (V[i0][j0]==0) continue;
+        if (i0 in ZZequivalenceclasses_rows){
+            if (j0 in ZZequivalenceclasses_cols){
+                //Actualizamos el mapa que nos dice qué clases de equivalencia son en realidad la misma 
+                let ZZZequivalence_current = {[ZZZequivalence_old[ZZequivalenceclasses_rows[i0]]]: ZZZequivalence_old[ZZequivalenceclasses_cols[j0]]};
+                for (k=1;k<=currentclass;k++){
+                    let p = ZZZequivalence_old[k];
+                    ZZZequivalence_old[k] = ZZZequivalence_current[p] ?? p;
+                }
+            } 
+            ZZequivalenceclasses_cols[j0]=ZZequivalenceclasses_rows[i0];
+        } else if (j0 in ZZequivalenceclasses_cols){
+            ZZequivalenceclasses_rows[i0]=ZZequivalenceclasses_cols[j0];
+        } else {
+            currentclass++;
+            ZZZequivalence_old[currentclass]=currentclass;
+            ZZequivalenceclasses_rows[i0]=currentclass;
+            ZZequivalenceclasses_cols[j0]=currentclass;
         }
     }
 
@@ -858,7 +851,7 @@ function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sig
     if (initial_parity==1 & sign){
         let zzequiv = new Set();
         if (ZZequivalenceclasses_rows[i1]){
-            zzequiv.add(ZZequivalenceclasses_rows[i1])
+            zzequiv.add(ZZZequivalence_old[ZZequivalenceclasses_rows[i1]])
         }
         initial_path[i1*n + j1] = 1;
         paths.push([initial_path, I, initial_parity, zzequiv, start_point, ZZequivalenceclasses_cols[j1]]);
@@ -873,7 +866,7 @@ function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sig
                 if (!((!objective) || ignoring(i1,j2) || j2==j1)){
                     zzequiv = new Set();
                     if (ZZequivalenceclasses_rows[i1] & V[i1][j2]==0){
-                        zzequiv.add(ZZequivalenceclasses_rows[i1])
+                        zzequiv.add(ZZZequivalence_old[ZZequivalenceclasses_rows[i1]])
                     }
                     let new_initial_path = new Int8Array(v * n);
                     new_initial_path[i1*n + j1] = -1;
@@ -935,14 +928,14 @@ function find_all_balanced_paths_one(V, ignoring=(i,j)=>{return false},point,sig
         
                             // Agregar a la lista de nuevos caminos
                             new_paths.push([new_path, [row, j], 1,current_zzequiv, start_point, current_objective]);
-                        } else if (ZZequivalenceclasses_rows[row]!=undefined & !current_zzequiv.has(current_objective)){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
-                            if (current_zzequiv.has(ZZequivalenceclasses_rows[row])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
+                        } else if (ZZequivalenceclasses_rows[row]!=undefined & !current_zzequiv.has(ZZZequivalence_old[current_objective])){ //Si estás en comunicación a través de los nonulos del vértice con la solución no inventes más ceros
+                            if (current_zzequiv.has(ZZZequivalence_old[ZZequivalenceclasses_rows[row]])) continue; //Observar que si la fila no tiene clase asignada no hay elementos 
                             // no nulos del vértice de la frontera en dicha fila y por tanto en el siguiente paso no podría añadir un -1 luego ese posible camino se puede ignorar.
                             // Crear un nuevo camino
                             let new_path = current_path.map(v=>v);
                             new_path[row*n + j] = 1; // Alterna paridad
                             let new_zzequiv = new Set(current_zzequiv);
-                            new_zzequiv.add(ZZequivalenceclasses_rows[row]);
+                            new_zzequiv.add(ZZZequivalence_old[ZZequivalenceclasses_rows[row]]);
                             // Agregar a la lista de nuevos caminos
                             new_paths.push([new_path, [row, j], 1,new_zzequiv, start_point, current_objective]);
                         } 
